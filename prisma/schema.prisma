@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Company {
+  id                 String          @id @default(cuid())
+  name               String          @unique
+  healthScore        Int             @default(3)
+  priority           Int             @default(2)
+  status             String
+  contractEndDate    DateTime?
+  primaryCSM         String
+  implementationLead String
+  secondLead         String?
+  thirdLead          String?
+  currentObjectives  String?         @db.Text
+  externalBlockers   String?         @db.Text
+  internalBlockers   String?         @db.Text
+  futureWork         String?         @db.Text
+  vault              TechnicalVault?
+  tickets            Ticket[]
+  activityLogs       ActivityLog[]
+  deadlines          Deadline[]
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+}
+
+model TechnicalVault {
+  id           String  @id @default(cuid())
+  companyId    String  @unique
+  company      Company @relation(fields: [companyId], references: [id])
+  ftpInfo      String?
+  apiKeys      String?
+  sshConfig    String?
+  otherSecrets String?
+}
+
+model ProductChangeRequest {
+  id          String    @id @default(cuid())
+  issue       String
+  description String
+  location    String
+  priority    Int       @default(3)
+  requestedBy String
+  assignedTo  String?
+  status      String
+  deadline    DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  type      String
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Ticket {
+  id        String  @id @default(cuid())
+  title     String
+  status    String
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+}
+
+model Deadline {
+  id          String   @id @default(cuid())
+  description String
+  dueDate     DateTime
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+}
