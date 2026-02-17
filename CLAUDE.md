@@ -28,7 +28,7 @@
 
 4. **AI Integration:** The `/api/ingest/activity` endpoint is the designated receiver for n8n AI summaries. It must handle POST requests and map `companyName` to the correct `CompanyID`.
 
-5. **UI Consistency:** Follow the 'Taxonomy' (shadcn/taxonomy) layout structure. Use sidebar-first navigation. Dark mode by default.
+5. **UI Consistency:** Follow the 'Taxonomy' (shadcn/taxonomy) layout structure. Use sidebar-first navigation. Light mode by default.
 
 ---
 
