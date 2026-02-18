@@ -5,6 +5,7 @@ import { HealthBadge } from "@/components/health-badge"
 import { StatusBadge } from "@/components/status-badge"
 import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
+import { escalateStaleBlockers } from "@/actions/blockers"
 
 type Props = {
   params: Promise<{ id: string }>
@@ -13,13 +14,17 @@ type Props = {
 export default async function ClientDetailPage({ params }: Props) {
   const { id } = await params
 
+  await escalateStaleBlockers()
+
   const company = await prisma.company.findUnique({
     where: { id },
     include: {
       vault: true,
-      tickets: true,
+      tickets: { orderBy: { createdAt: "desc" } },
       activityLogs: { orderBy: { createdAt: "desc" } },
       deadlines: { orderBy: { dueDate: "asc" } },
+      blockers: { orderBy: { createdAt: "desc" } },
+      knowledgeBase: { orderBy: { createdAt: "desc" } },
     },
   })
 
@@ -38,15 +43,13 @@ export default async function ClientDetailPage({ params }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">{company.name}</h2>
-          <div className="mt-2 flex items-center gap-3">
+          <div className="mt-2 flex items-center gap-3 flex-wrap">
             <HealthBadge score={company.healthScore} />
             <StatusBadge status={company.status} />
             <span className="text-sm text-muted-foreground">CSM: {company.primaryCSM}</span>
-            {company.implementationLead && (
-              <span className="text-sm text-muted-foreground">
-                Lead: {company.implementationLead}
-              </span>
-            )}
+            <span className="text-sm text-muted-foreground">
+              Lead: {company.implementationLead}
+            </span>
           </div>
         </div>
       </div>

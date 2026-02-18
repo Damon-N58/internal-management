@@ -4,18 +4,20 @@ import { useState } from "react"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import type { Company, TechnicalVault, ActivityLog, Deadline } from "@/types"
+import type { Company, TechnicalVault, ActivityLog, Deadline, Blocker } from "@/types"
 
 type FullCompany = Company & {
   vault: TechnicalVault | null
   activityLogs: ActivityLog[]
   deadlines: Deadline[]
+  blockers: Blocker[]
 }
 
 export function OverviewTab({ company }: { company: FullCompany }) {
   const [handoffOpen, setHandoffOpen] = useState(false)
   const [copied, setCopied] = useState(false)
 
+  const openBlockers = company.blockers.filter((b) => b.status === "Open")
   const handoffMarkdown = generateHandoffMarkdown(company)
 
   const handleCopy = () => {
@@ -29,8 +31,26 @@ export function OverviewTab({ company }: { company: FullCompany }) {
       <div className="grid grid-cols-2 gap-4">
         <Section title="Current Objectives" content={company.currentObjectives} />
         <Section title="Future Work" content={company.futureWork} />
-        <Section title="External Blockers" content={company.externalBlockers} />
-        <Section title="Internal Blockers" content={company.internalBlockers} />
+      </div>
+
+      <div className="rounded-lg border bg-white p-4">
+        <h3 className="mb-2 text-sm font-semibold text-slate-700">Active Blockers</h3>
+        {openBlockers.length === 0 ? (
+          <p className="text-sm text-green-700">✓ No open blockers</p>
+        ) : (
+          <div className="space-y-1">
+            {openBlockers.map((b) => (
+              <div key={b.id} className="flex items-center gap-2 text-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" />
+                <span className="font-medium">{b.title}</span>
+                <span className="text-muted-foreground">— {b.category} · {b.owner}</span>
+              </div>
+            ))}
+            <p className="mt-2 text-xs text-muted-foreground">
+              See the Blockers tab for full details and resolution tracking.
+            </p>
+          </div>
+        )}
       </div>
 
       {company.deadlines.length > 0 && (
@@ -52,9 +72,7 @@ export function OverviewTab({ company }: { company: FullCompany }) {
         </div>
       )}
 
-      <div className="flex items-center gap-3">
-        <Button onClick={() => setHandoffOpen(true)}>Generate Handoff Report</Button>
-      </div>
+      <Button onClick={() => setHandoffOpen(true)}>Generate Handoff Report</Button>
 
       <Dialog open={handoffOpen} onOpenChange={setHandoffOpen}>
         <DialogContent className="max-w-2xl">
@@ -94,6 +112,8 @@ function Section({
 
 function generateHandoffMarkdown(company: FullCompany): string {
   const recentLogs = company.activityLogs.slice(0, 3)
+  const openBlockers = company.blockers.filter((b) => b.status === "Open")
+
   const vaultSummary = company.vault
     ? [
         `- FTP: ${company.vault.ftpInfo ? "Configured ✓" : "Not set"}`,
@@ -102,6 +122,13 @@ function generateHandoffMarkdown(company: FullCompany): string {
         `- Other: ${company.vault.otherSecrets ? "Configured ✓" : "Not set"}`,
       ].join("\n")
     : "No vault configured."
+
+  const blockerLines =
+    openBlockers.length > 0
+      ? openBlockers
+          .map((b) => `- [${b.category}] ${b.title} — Owner: ${b.owner}`)
+          .join("\n")
+      : "No open blockers."
 
   const deadlineLines =
     company.deadlines.length > 0
@@ -133,12 +160,8 @@ ${company.secondLead ? `- Second Lead: ${company.secondLead}` : ""}
 ## Current Objectives
 ${company.currentObjectives ?? "None recorded."}
 
-## Blockers
-### External
-${company.externalBlockers ?? "None."}
-
-### Internal
-${company.internalBlockers ?? "None."}
+## Active Blockers
+${blockerLines}
 
 ## Future Work
 ${company.futureWork ?? "None recorded."}

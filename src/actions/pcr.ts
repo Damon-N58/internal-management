@@ -16,10 +16,7 @@ type CreatePCRData = {
 
 export async function createPCR(data: CreatePCRData) {
   const pcr = await prisma.productChangeRequest.create({
-    data: {
-      ...data,
-      status: "Requested",
-    },
+    data: { ...data, status: "Requested" },
   })
   revalidatePath("/product")
   return pcr

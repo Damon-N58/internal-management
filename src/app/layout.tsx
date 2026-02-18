@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import { Sidebar } from "@/components/layout/sidebar"
+import { NotificationBellWrapper } from "@/components/layout/notification-bell-wrapper"
 import { Toaster } from "@/components/ui/sonner"
 
 const geistSans = Geist({
@@ -28,7 +29,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <div className="flex h-screen overflow-hidden">
-          <Sidebar />
+          <Sidebar notificationBell={<NotificationBellWrapper />} />
           <main className="flex-1 overflow-y-auto bg-slate-50 p-8">
             {children}
           </main>

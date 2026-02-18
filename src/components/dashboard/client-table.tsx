@@ -1,7 +1,8 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
-import { addDays, isBefore } from "date-fns"
+import { addDays, isBefore, format } from "date-fns"
 import { HealthBadge } from "@/components/health-badge"
 import { StatusBadge } from "@/components/status-badge"
 import { updateCompanyStatus } from "@/actions/companies"
@@ -14,24 +15,40 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
-import type { Company, Deadline, ActivityLog } from "@/types"
+import type { Company, Deadline, ActivityLog, Blocker, Ticket } from "@/types"
 
 type CompanyWithRelations = Company & {
   deadlines: Deadline[]
   activityLogs: ActivityLog[]
+  blockers: Blocker[]
+  tickets: Ticket[]
 }
+
+type View = "all" | "sales" | "engineering"
 
 type Props = {
   companies: CompanyWithRelations[]
 }
 
 export function ClientTable({ companies }: Props) {
+  const [view, setView] = useState<View>("all")
   const sixtyDaysOut = addDays(new Date(), 60)
 
   return (
-    <div className="space-y-2">
-      <h3 className="text-lg font-semibold">All Clients</h3>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">All Clients</h3>
+        <Tabs value={view} onValueChange={(v) => setView(v as View)}>
+          <TabsList>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="sales">Sales View</TabsTrigger>
+            <TabsTrigger value="engineering">Engineering View</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
       <div className="rounded-lg border bg-white">
         <Table>
           <TableHeader>
@@ -39,17 +56,36 @@ export function ClientTable({ companies }: Props) {
               <TableHead>Client</TableHead>
               <TableHead>Health</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Primary CSM</TableHead>
-              <TableHead>Objectives</TableHead>
-              <TableHead>Blockers</TableHead>
-              <TableHead>Actions</TableHead>
+              {view === "all" && (
+                <>
+                  <TableHead>Primary CSM</TableHead>
+                  <TableHead>Objectives</TableHead>
+                  <TableHead>Actions</TableHead>
+                </>
+              )}
+              {view === "sales" && (
+                <>
+                  <TableHead>CSM</TableHead>
+                  <TableHead>Contract End</TableHead>
+                  <TableHead>Renewal Risk</TableHead>
+                  <TableHead>Actions</TableHead>
+                </>
+              )}
+              {view === "engineering" && (
+                <>
+                  <TableHead>Lead</TableHead>
+                  <TableHead>Open Blockers</TableHead>
+                  <TableHead>Open Tickets</TableHead>
+                  <TableHead>Last Activity</TableHead>
+                </>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
             {companies.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                  No clients yet. Add your first client to get started.
+                  No clients yet.
                 </TableCell>
               </TableRow>
             ) : (
@@ -57,6 +93,8 @@ export function ClientTable({ companies }: Props) {
                 const nearExpiry =
                   company.contractEndDate &&
                   isBefore(new Date(company.contractEndDate), sixtyDaysOut)
+                const openBlockers = company.blockers.filter((b) => b.status === "Open").length
+                const openTickets = company.tickets.filter((t) => t.status !== "Closed").length
 
                 return (
                   <TableRow
@@ -70,11 +108,6 @@ export function ClientTable({ companies }: Props) {
                       >
                         {company.name}
                       </Link>
-                      {nearExpiry && (
-                        <span className="ml-2 text-xs text-amber-600 font-normal">
-                          ⚠ Contract expiring
-                        </span>
-                      )}
                     </TableCell>
                     <TableCell>
                       <HealthBadge score={company.healthScore} />
@@ -82,26 +115,84 @@ export function ClientTable({ companies }: Props) {
                     <TableCell>
                       <StatusBadge status={company.status} />
                     </TableCell>
-                    <TableCell className="text-sm">{company.primaryCSM}</TableCell>
-                    <TableCell className="max-w-[180px] truncate text-sm text-muted-foreground">
-                      {company.currentObjectives ?? "—"}
-                    </TableCell>
-                    <TableCell className="max-w-[180px] truncate text-sm text-muted-foreground">
-                      {company.internalBlockers ?? company.externalBlockers ?? "—"}
-                    </TableCell>
-                    <TableCell>
-                      {company.status === "POC" ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateCompanyStatus(company.id, "Implementation")}
-                        >
-                          Move to Implementation
-                        </Button>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
+
+                    {view === "all" && (
+                      <>
+                        <TableCell className="text-sm">{company.primaryCSM}</TableCell>
+                        <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
+                          {company.currentObjectives ?? "—"}
+                        </TableCell>
+                        <TableCell>
+                          {company.status === "POC" ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateCompanyStatus(company.id, "Implementation")}
+                            >
+                              Move to Implementation
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                      </>
+                    )}
+
+                    {view === "sales" && (
+                      <>
+                        <TableCell className="text-sm">{company.primaryCSM}</TableCell>
+                        <TableCell className="text-sm">
+                          {company.contractEndDate
+                            ? format(new Date(company.contractEndDate), "MMM d, yyyy")
+                            : <span className="text-muted-foreground">—</span>}
+                        </TableCell>
+                        <TableCell>
+                          {nearExpiry ? (
+                            <span className="inline-flex items-center rounded-full bg-red-100 border border-red-200 px-2 py-0.5 text-xs font-medium text-red-700">
+                              ⚠ At risk
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {company.status === "POC" ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateCompanyStatus(company.id, "Implementation")}
+                            >
+                              Move to Implementation
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                      </>
+                    )}
+
+                    {view === "engineering" && (
+                      <>
+                        <TableCell className="text-sm">{company.implementationLead}</TableCell>
+                        <TableCell>
+                          {openBlockers > 0 ? (
+                            <span className="inline-flex items-center rounded-full bg-red-100 border border-red-200 px-2 py-0.5 text-xs font-medium text-red-700">
+                              {openBlockers} blocker{openBlockers > 1 ? "s" : ""}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-green-600">✓ Clear</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {openTickets > 0 ? openTickets : "—"}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {company.lastActivityAt
+                            ? format(new Date(company.lastActivityAt), "MMM d")
+                            : "Never"}
+                        </TableCell>
+                      </>
+                    )}
                   </TableRow>
                 )
               })
