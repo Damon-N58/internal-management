@@ -1,20 +1,32 @@
 import { supabase } from "@/lib/supabase"
+import { requireAuth, getUserCompanyIds, isAdmin } from "@/lib/auth"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { HealthBadge } from "@/components/health-badge"
 import { StatusBadge } from "@/components/status-badge"
 
 export default async function ClientsPage() {
-  const { data: companies } = await supabase
+  const profile = await requireAuth()
+  const companyIds = isAdmin(profile) ? null : await getUserCompanyIds(profile.id)
+
+  let query = supabase
     .from("company")
     .select()
     .order("name", { ascending: true })
+
+  if (companyIds) {
+    query = query.in("id", companyIds)
+  }
+
+  const { data: companies } = await query
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Clients</h2>
-        <p className="text-muted-foreground">All managed client accounts</p>
+        <p className="text-muted-foreground">
+          {isAdmin(profile) ? "All managed client accounts" : "Your assigned client accounts"}
+        </p>
       </div>
       <div className="grid gap-3">
         {!companies || companies.length === 0 ? (

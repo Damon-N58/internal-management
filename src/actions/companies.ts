@@ -29,6 +29,15 @@ export async function updateCompanyStatus(companyId: string, status: CompanyStat
   revalidatePath(`/clients/${companyId}`)
 }
 
+export async function updateGoogleDriveUrl(companyId: string, url: string) {
+  await supabase
+    .from("company")
+    .update({ google_drive_url: url || null })
+    .eq("id", companyId)
+
+  revalidatePath(`/clients/${companyId}`)
+}
+
 export async function recalculateCompanyHealth(companyId: string) {
   const result = await applyHealthScore(companyId)
   revalidatePath("/")

@@ -21,6 +21,7 @@ export type Database = {
           future_work: string | null
           last_activity_at: string | null
           conversation_volume: number | null
+          google_drive_url: string | null
           created_at: string
           updated_at: string
         }
@@ -41,6 +42,7 @@ export type Database = {
           future_work?: string | null
           last_activity_at?: string | null
           conversation_volume?: number | null
+          google_drive_url?: string | null
         }
         Update: Partial<Database["public"]["Tables"]["company"]["Insert"]>
         Relationships: [
@@ -174,14 +176,22 @@ export type Database = {
         Row: {
           id: string
           title: string
+          description: string | null
           status: string
+          priority: number
+          assigned_to: string | null
+          due_date: string | null
           company_id: string
           created_at: string
         }
         Insert: {
           id?: string
           title: string
+          description?: string | null
           status: string
+          priority?: number
+          assigned_to?: string | null
+          due_date?: string | null
           company_id: string
         }
         Update: Partial<Database["public"]["Tables"]["ticket"]["Insert"]>
@@ -191,6 +201,38 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_comment: {
+        Row: {
+          id: string
+          ticket_id: string
+          author_id: string
+          content: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          ticket_id: string
+          author_id: string
+          content: string
+        }
+        Update: Partial<Database["public"]["Tables"]["ticket_comment"]["Insert"]>
+        Relationships: [
+          {
+            foreignKeyName: "ticket_comment_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "ticket"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_comment_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profile"
             referencedColumns: ["id"]
           },
         ]
@@ -336,6 +378,78 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile: {
+        Row: {
+          id: string
+          email: string
+          full_name: string
+          role: string
+          created_at: string
+        }
+        Insert: {
+          id: string
+          email: string
+          full_name?: string
+          role?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["profile"]["Insert"]>
+        Relationships: []
+      }
+      user_company_assignment: {
+        Row: {
+          id: string
+          user_id: string
+          company_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          company_id: string
+        }
+        Update: Partial<Database["public"]["Tables"]["user_company_assignment"]["Insert"]>
+        Relationships: [
+          {
+            foreignKeyName: "uca_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profile"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "uca_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      todo: {
+        Row: {
+          id: string
+          user_id: string
+          text: string
+          is_completed: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          text: string
+          is_completed?: boolean
+        }
+        Update: Partial<Database["public"]["Tables"]["todo"]["Insert"]>
+        Relationships: [
+          {
+            foreignKeyName: "todo_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profile"
             referencedColumns: ["id"]
           },
         ]

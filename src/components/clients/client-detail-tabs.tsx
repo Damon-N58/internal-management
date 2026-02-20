@@ -26,9 +26,18 @@ export type FullCompany = Company & {
   knowledge_base_entry: KnowledgeBaseEntry[]
 }
 
-type Props = { company: FullCompany }
+export type TeamMember = {
+  id: string
+  full_name: string
+  email: string
+}
 
-export function ClientDetailTabs({ company }: Props) {
+type Props = {
+  company: FullCompany
+  teamMembers?: TeamMember[]
+}
+
+export function ClientDetailTabs({ company, teamMembers = [] }: Props) {
   const openBlockerCount = company.blocker.filter((b) => b.status === "Open").length
   const openTicketCount = company.ticket.filter((t) => t.status !== "Closed").length
 
@@ -71,7 +80,7 @@ export function ClientDetailTabs({ company }: Props) {
         <BlockersTab blockers={company.blocker} companyId={company.id} />
       </TabsContent>
       <TabsContent value="tickets" className="mt-6">
-        <TicketsTab tickets={company.ticket} companyId={company.id} />
+        <TicketsTab tickets={company.ticket} companyId={company.id} teamMembers={teamMembers} />
       </TabsContent>
       <TabsContent value="activity" className="mt-6">
         <ActivityTab logs={company.activity_log} companyId={company.id} />

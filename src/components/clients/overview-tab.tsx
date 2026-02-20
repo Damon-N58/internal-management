@@ -2,8 +2,11 @@
 
 import { useState } from "react"
 import { format } from "date-fns"
+import { ExternalLink, FolderOpen, Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { updateGoogleDriveUrl } from "@/actions/companies"
 import type { Company, TechnicalVault, ActivityLog, Deadline, Blocker } from "@/types"
 
 type FullCompany = Company & {
@@ -16,6 +19,8 @@ type FullCompany = Company & {
 export function OverviewTab({ company }: { company: FullCompany }) {
   const [handoffOpen, setHandoffOpen] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [editingDrive, setEditingDrive] = useState(false)
+  const [driveUrl, setDriveUrl] = useState(company.google_drive_url ?? "")
 
   const openBlockers = company.blocker.filter((b) => b.status === "Open")
   const handoffMarkdown = generateHandoffMarkdown(company)
@@ -26,8 +31,60 @@ export function OverviewTab({ company }: { company: FullCompany }) {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const handleSaveDrive = async () => {
+    await updateGoogleDriveUrl(company.id, driveUrl)
+    setEditingDrive(false)
+  }
+
   return (
     <div className="space-y-6">
+      <div className="rounded-lg border bg-white p-4">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+            <FolderOpen className="h-4 w-4" />
+            Company Google Drive
+          </h3>
+          <button
+            onClick={() => setEditingDrive(!editingDrive)}
+            className="text-muted-foreground hover:text-slate-900"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+        </div>
+        {editingDrive ? (
+          <div className="flex gap-2">
+            <Input
+              value={driveUrl}
+              onChange={(e) => setDriveUrl(e.target.value)}
+              placeholder="https://drive.google.com/drive/folders/..."
+              className="text-sm"
+            />
+            <Button size="sm" onClick={handleSaveDrive}>Save</Button>
+            <Button size="sm" variant="outline" onClick={() => setEditingDrive(false)}>Cancel</Button>
+          </div>
+        ) : company.google_drive_url ? (
+          <a
+            href={company.google_drive_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:underline"
+          >
+            Open Google Drive Folder
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            No Google Drive link set.{" "}
+            <button
+              onClick={() => setEditingDrive(true)}
+              className="text-blue-600 hover:underline"
+            >
+              Add one
+            </button>
+          </p>
+        )}
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <Section title="Current Objectives" content={company.current_objectives} />
         <Section title="Future Work" content={company.future_work} />

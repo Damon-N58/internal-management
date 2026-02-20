@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase"
 import { notFound } from "next/navigation"
+import { requireAuth, getUserCompanyIds, isAdmin } from "@/lib/auth"
 import { ClientDetailTabs } from "@/components/clients/client-detail-tabs"
 import { HealthBadge } from "@/components/health-badge"
 import { StatusBadge } from "@/components/status-badge"
@@ -7,6 +8,7 @@ import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
 import { escalateStaleBlockers } from "@/actions/blockers"
 import type { FullCompany } from "@/components/clients/client-detail-tabs"
+import type { Profile } from "@/types"
 
 type Props = {
   params: Promise<{ id: string }>
@@ -14,6 +16,12 @@ type Props = {
 
 export default async function ClientDetailPage({ params }: Props) {
   const { id } = await params
+  const profile = await requireAuth()
+
+  if (!isAdmin(profile)) {
+    const companyIds = await getUserCompanyIds(profile.id)
+    if (!companyIds.includes(id)) notFound()
+  }
 
   await escalateStaleBlockers()
 
@@ -26,6 +34,16 @@ export default async function ClientDetailPage({ params }: Props) {
     .single()
 
   if (!company) notFound()
+
+  const { data: teamMembers } = await supabase
+    .from("user_company_assignment")
+    .select("user_id, profile:user_id(id, full_name, email)")
+    .eq("company_id", id)
+
+  const assignableUsers = (teamMembers ?? []).map((m) => {
+    const p = m.profile as unknown as Profile
+    return { id: p.id, full_name: p.full_name, email: p.email }
+  })
 
   const fullCompany = {
     ...company,
@@ -61,7 +79,7 @@ export default async function ClientDetailPage({ params }: Props) {
         </div>
       </div>
 
-      <ClientDetailTabs company={fullCompany} />
+      <ClientDetailTabs company={fullCompany} teamMembers={assignableUsers} />
     </div>
   )
 }

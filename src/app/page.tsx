@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ClientTable } from "@/components/dashboard/client-table"
 import { AttentionSection } from "@/components/dashboard/attention-section"
 import { generateNotifications } from "@/actions/notifications"
+import { requireAuth, getUserCompanyIds, isAdmin } from "@/lib/auth"
 import { addDays } from "date-fns"
 import type { Company, Deadline, ActivityLog, Blocker, Ticket } from "@/types"
 
@@ -14,6 +15,9 @@ export type CompanyWithRelations = Company & {
 }
 
 export default async function DashboardPage() {
+  const profile = await requireAuth()
+  const companyIds = isAdmin(profile) ? null : await getUserCompanyIds(profile.id)
+
   try {
     await generateNotifications()
   } catch {
@@ -24,16 +28,28 @@ export default async function DashboardPage() {
   let upcomingDeadlines: Deadline[] = []
 
   try {
-    const { data: companyData } = await supabase
+    let query = supabase
       .from("company")
       .select("*, deadline(*), activity_log(*), blocker(*), ticket(*)")
       .order("health_score", { ascending: true })
 
+    if (companyIds) {
+      query = query.in("id", companyIds)
+    }
+
+    const { data: companyData } = await query
+
     const sevenDaysOut = addDays(new Date(), 7).toISOString()
-    const { data: deadlineData } = await supabase
+    let deadlineQuery = supabase
       .from("deadline")
       .select()
       .lte("due_date", sevenDaysOut)
+
+    if (companyIds) {
+      deadlineQuery = deadlineQuery.in("company_id", companyIds)
+    }
+
+    const { data: deadlineData } = await deadlineQuery
 
     companies = (companyData ?? []) as unknown as CompanyWithRelations[]
     upcomingDeadlines = deadlineData ?? []

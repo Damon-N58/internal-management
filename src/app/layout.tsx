@@ -3,7 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import { Sidebar } from "@/components/layout/sidebar"
 import { NotificationBellWrapper } from "@/components/layout/notification-bell-wrapper"
+import { TodoButtonWrapper } from "@/components/layout/todo-button-wrapper"
 import { Toaster } from "@/components/ui/sonner"
+import { getCurrentUser } from "@/lib/auth"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,20 +22,30 @@ export const metadata: Metadata = {
   description: "Internal management portal",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const profile = await getCurrentUser()
+
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <div className="flex h-screen overflow-hidden">
-          <Sidebar notificationBell={<NotificationBellWrapper />} />
-          <main className="flex-1 overflow-y-auto bg-slate-50 p-8">
-            {children}
-          </main>
-        </div>
+        {profile ? (
+          <div className="flex h-screen overflow-hidden">
+            <Sidebar
+              profile={profile}
+              notificationBell={<NotificationBellWrapper />}
+              todoButton={<TodoButtonWrapper />}
+            />
+            <main className="flex-1 overflow-y-auto bg-slate-50 p-8">
+              {children}
+            </main>
+          </div>
+        ) : (
+          <>{children}</>
+        )}
         <Toaster />
       </body>
     </html>

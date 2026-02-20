@@ -12,7 +12,7 @@ export type Notification = Database["public"]["Tables"]["notification"]["Row"]
 export type HealthScoreLog = Database["public"]["Tables"]["health_score_log"]["Row"]
 
 export type CompanyStatus = "POC" | "Implementation" | "Active" | "Churn Risk"
-export type TicketStatus = "Open" | "Blocked" | "Closed"
+export type TicketStatus = "Open" | "In Progress" | "Blocked" | "Closed"
 export type PCRStatus = "Requested" | "In Progress" | "Completed"
 export type PCRIssueType = "Feature" | "Issue"
 export type PCRLocation = "UI" | "Functionality"
@@ -26,3 +26,11 @@ export type NotificationType =
   | "HEALTH_DROP"
   | "STALE_BLOCKER"
   | "NO_ACTIVITY"
+
+export type Profile = Database["public"]["Tables"]["profile"]["Row"]
+export type UserCompanyAssignment = Database["public"]["Tables"]["user_company_assignment"]["Row"]
+export type TicketComment = Database["public"]["Tables"]["ticket_comment"]["Row"]
+export type Todo = Database["public"]["Tables"]["todo"]["Row"]
+
+export type UserRole = "Admin" | "Manager" | "Member"
+export type TicketPriority = 1 | 2 | 3 | 4 | 5
