@@ -1,20 +1,23 @@
 "use server"
 
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase"
 import { revalidatePath } from "next/cache"
 import { writeActivityLog } from "@/actions/activity-logs"
 import { applyHealthScore } from "@/lib/apply-health-score"
 import type { CompanyStatus } from "@/types"
 
 export async function updateCompanyStatus(companyId: string, status: CompanyStatus) {
-  const current = await prisma.company.findUnique({
-    where: { id: companyId },
-    select: { status: true },
-  })
-  await prisma.company.update({
-    where: { id: companyId },
-    data: { status },
-  })
+  const { data: current } = await supabase
+    .from("company")
+    .select("status")
+    .eq("id", companyId)
+    .single()
+
+  await supabase
+    .from("company")
+    .update({ status })
+    .eq("id", companyId)
+
   if (current && current.status !== status) {
     await writeActivityLog(
       companyId,

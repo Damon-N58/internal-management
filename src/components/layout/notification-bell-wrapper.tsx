@@ -1,13 +1,23 @@
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase"
 import { NotificationBell } from "./notification-bell"
+import type { Notification } from "@/types"
 
 export async function NotificationBellWrapper() {
-  const notifications = await prisma.notification.findMany({
-    orderBy: [{ isRead: "asc" }, { createdAt: "desc" }],
-    take: 20,
-  })
+  let notifications: Notification[] = []
+  try {
+    const { data } = await supabase
+      .from("notification")
+      .select()
+      .order("is_read", { ascending: true })
+      .order("created_at", { ascending: false })
+      .limit(20)
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length
+    notifications = data ?? []
+  } catch {
+    // DB unavailable — render empty bell
+  }
+
+  const unreadCount = notifications.filter((n) => !n.is_read).length
 
   return <NotificationBell notifications={notifications} unreadCount={unreadCount} />
 }

@@ -8,8 +8,8 @@ import { StatusBadge } from "@/components/status-badge"
 import type { Company, Blocker, Deadline } from "@/types"
 
 type CompanyWithRelations = Company & {
-  blockers: Blocker[]
-  deadlines: Deadline[]
+  blocker: Blocker[]
+  deadline: Deadline[]
 }
 
 type AttentionReason = {
@@ -21,26 +21,26 @@ function getAttentionReasons(company: CompanyWithRelations): AttentionReason[] {
   const reasons: AttentionReason[] = []
   const sixtyDaysOut = addDays(new Date(), 60)
 
-  if (company.healthScore <= 2) {
-    reasons.push({ label: `Health score: ${company.healthScore}/5`, severity: "critical" })
+  if (company.health_score <= 2) {
+    reasons.push({ label: `Health score: ${company.health_score}/5`, severity: "critical" })
   }
 
-  const openBlockers = company.blockers.filter((b) => b.status === "Open")
+  const openBlockers = company.blocker.filter((b) => b.status === "Open")
   const staleBlockers = openBlockers.filter(
-    (b) => differenceInDays(new Date(), new Date(b.updatedAt)) > 5
+    (b) => differenceInDays(new Date(), new Date(b.updated_at)) > 5
   )
   if (staleBlockers.length > 0) {
     reasons.push({ label: `${staleBlockers.length} stale blocker${staleBlockers.length > 1 ? "s" : ""}`, severity: "warning" })
   }
-  if (openBlockers.length > 0 && company.healthScore <= 3) {
+  if (openBlockers.length > 0 && company.health_score <= 3) {
     reasons.push({ label: `${openBlockers.length} open blocker${openBlockers.length > 1 ? "s" : ""}`, severity: "warning" })
   }
 
   if (
-    company.contractEndDate &&
-    isBefore(new Date(company.contractEndDate), sixtyDaysOut)
+    company.contract_end_date &&
+    isBefore(new Date(company.contract_end_date), sixtyDaysOut)
   ) {
-    const daysLeft = differenceInDays(new Date(company.contractEndDate), new Date())
+    const daysLeft = differenceInDays(new Date(company.contract_end_date), new Date())
     reasons.push({
       label: `Contract expires in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`,
       severity: daysLeft <= 14 ? "critical" : "warning",
@@ -63,7 +63,7 @@ export function AttentionSection({ companies }: Props) {
       const bCritical = b.reasons.some((r) => r.severity === "critical")
       if (aCritical && !bCritical) return -1
       if (!aCritical && bCritical) return 1
-      return a.company.healthScore - b.company.healthScore
+      return a.company.health_score - b.company.health_score
     })
 
   if (companiesNeedingAttention.length === 0) {
@@ -98,7 +98,7 @@ export function AttentionSection({ companies }: Props) {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium text-sm">{company.name}</span>
                     <StatusBadge status={company.status} />
-                    <HealthBadge score={company.healthScore} />
+                    <HealthBadge score={company.health_score} />
                   </div>
                   <div className="mt-1 flex flex-wrap gap-2">
                     {reasons.map((r, i) => (
@@ -116,7 +116,7 @@ export function AttentionSection({ companies }: Props) {
                   </div>
                 </div>
                 <span className="text-xs text-muted-foreground shrink-0">
-                  {company.primaryCSM}
+                  {company.primary_csm}
                 </span>
               </div>
             </Link>

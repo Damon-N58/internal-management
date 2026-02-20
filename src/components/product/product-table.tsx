@@ -98,9 +98,9 @@ export function ProductTable({ pcrs }: Props) {
                   <TableCell className="text-sm font-medium">
                     {priorityLabel[pcr.priority] ?? pcr.priority}
                   </TableCell>
-                  <TableCell className="text-sm">{pcr.requestedBy}</TableCell>
+                  <TableCell className="text-sm">{pcr.requested_by}</TableCell>
                   <TableCell className="text-sm">
-                    {pcr.assignedTo ?? <span className="text-muted-foreground">—</span>}
+                    {pcr.assigned_to ?? <span className="text-muted-foreground">—</span>}
                   </TableCell>
                   <TableCell>
                     <StatusBadge status={pcr.status} />

@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase"
 import { notFound } from "next/navigation"
 import { ClientDetailTabs } from "@/components/clients/client-detail-tabs"
 import { HealthBadge } from "@/components/health-badge"
@@ -6,6 +6,7 @@ import { StatusBadge } from "@/components/status-badge"
 import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
 import { escalateStaleBlockers } from "@/actions/blockers"
+import type { FullCompany } from "@/components/clients/client-detail-tabs"
 
 type Props = {
   params: Promise<{ id: string }>
@@ -16,19 +17,25 @@ export default async function ClientDetailPage({ params }: Props) {
 
   await escalateStaleBlockers()
 
-  const company = await prisma.company.findUnique({
-    where: { id },
-    include: {
-      vault: true,
-      tickets: { orderBy: { createdAt: "desc" } },
-      activityLogs: { orderBy: { createdAt: "desc" } },
-      deadlines: { orderBy: { dueDate: "asc" } },
-      blockers: { orderBy: { createdAt: "desc" } },
-      knowledgeBase: { orderBy: { createdAt: "desc" } },
-    },
-  })
+  const { data: company } = await supabase
+    .from("company")
+    .select(
+      "*, technical_vault(*), ticket(*), activity_log(*), deadline(*), blocker(*), knowledge_base_entry(*)"
+    )
+    .eq("id", id)
+    .single()
 
   if (!company) notFound()
+
+  const fullCompany = {
+    ...company,
+    technical_vault: (company.technical_vault ?? null) as unknown as FullCompany["technical_vault"],
+    ticket: (company.ticket ?? []) as unknown as FullCompany["ticket"],
+    activity_log: (company.activity_log ?? []) as unknown as FullCompany["activity_log"],
+    deadline: (company.deadline ?? []) as unknown as FullCompany["deadline"],
+    blocker: (company.blocker ?? []) as unknown as FullCompany["blocker"],
+    knowledge_base_entry: (company.knowledge_base_entry ?? []) as unknown as FullCompany["knowledge_base_entry"],
+  } as FullCompany
 
   return (
     <div className="space-y-6">
@@ -44,17 +51,17 @@ export default async function ClientDetailPage({ params }: Props) {
         <div>
           <h2 className="text-2xl font-bold tracking-tight">{company.name}</h2>
           <div className="mt-2 flex items-center gap-3 flex-wrap">
-            <HealthBadge score={company.healthScore} />
+            <HealthBadge score={company.health_score} />
             <StatusBadge status={company.status} />
-            <span className="text-sm text-muted-foreground">CSM: {company.primaryCSM}</span>
+            <span className="text-sm text-muted-foreground">CSM: {company.primary_csm}</span>
             <span className="text-sm text-muted-foreground">
-              Lead: {company.implementationLead}
+              Lead: {company.implementation_lead}
             </span>
           </div>
         </div>
       </div>
 
-      <ClientDetailTabs company={company} />
+      <ClientDetailTabs company={fullCompany} />
     </div>
   )
 }

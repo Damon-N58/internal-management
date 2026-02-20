@@ -1,6 +1,6 @@
 "use server"
 
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase"
 import { revalidatePath } from "next/cache"
 import { writeActivityLog } from "@/actions/activity-logs"
 import type { KBEntryType } from "@/types"
@@ -13,15 +13,24 @@ type CreateKBEntryData = {
 }
 
 export async function createKBEntry(companyId: string, data: CreateKBEntryData) {
-  const entry = await prisma.knowledgeBaseEntry.create({
-    data: { ...data, companyId },
-  })
+  const { data: entry } = await supabase
+    .from("knowledge_base_entry")
+    .insert({
+      title: data.title,
+      type: data.type,
+      content: data.content ?? null,
+      url: data.url ?? null,
+      company_id: companyId,
+    })
+    .select()
+    .single()
+
   await writeActivityLog(companyId, `Knowledge base entry added: "${data.title}"`, "Automated")
   revalidatePath(`/clients/${companyId}`)
   return entry
 }
 
 export async function deleteKBEntry(entryId: string, companyId: string) {
-  await prisma.knowledgeBaseEntry.delete({ where: { id: entryId } })
+  await supabase.from("knowledge_base_entry").delete().eq("id", entryId)
   revalidatePath(`/clients/${companyId}`)
 }

@@ -1,78 +1,69 @@
 "use server"
 
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase"
 import { revalidatePath } from "next/cache"
 import { addDays, differenceInDays } from "date-fns"
 
 export async function generateNotifications() {
-  const [companies, blockers] = await Promise.all([
-    prisma.company.findMany({
-      select: {
-        id: true,
-        name: true,
-        contractEndDate: true,
-        healthScore: true,
-        lastActivityAt: true,
-        healthScoreLogs: {
-          take: 2,
-          orderBy: { calculatedAt: "desc" },
-          select: { score: true, calculatedAt: true },
-        },
-      },
-    }),
-    prisma.blocker.findMany({
-      where: { status: "Open" },
-      select: { id: true, title: true, companyId: true, createdAt: true, updatedAt: true },
-    }),
+  const [{ data: companies }, { data: blockers }] = await Promise.all([
+    supabase
+      .from("company")
+      .select("id, name, contract_end_date, health_score, last_activity_at"),
+    supabase
+      .from("blocker")
+      .select("id, title, company_id, created_at, updated_at")
+      .eq("status", "Open"),
   ])
 
-  const existingUnread = await prisma.notification.findMany({
-    where: { isRead: false },
-    select: { type: true, companyId: true },
-  })
+  if (!companies || !blockers) return
+
+  const { data: existingUnread } = await supabase
+    .from("notification")
+    .select("type, company_id")
+    .eq("is_read", false)
 
   const existingKeys = new Set(
-    existingUnread.map((n) => `${n.type}:${n.companyId ?? "global"}`)
+    (existingUnread ?? []).map((n) => `${n.type}:${n.company_id ?? "global"}`)
   )
 
   const toCreate: {
     type: string
     message: string
     priority: number
-    companyId?: string
+    company_id?: string
   }[] = []
 
   const sixtyDaysOut = addDays(new Date(), 60)
 
   for (const company of companies) {
     if (
-      company.contractEndDate &&
-      new Date(company.contractEndDate) < sixtyDaysOut &&
+      company.contract_end_date &&
+      new Date(company.contract_end_date) < sixtyDaysOut &&
       !existingKeys.has(`CONTRACT_EXPIRY:${company.id}`)
     ) {
-      const daysLeft = differenceInDays(new Date(company.contractEndDate), new Date())
+      const daysLeft = differenceInDays(new Date(company.contract_end_date), new Date())
       toCreate.push({
         type: "CONTRACT_EXPIRY",
         message: `${company.name}: contract expires in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`,
         priority: daysLeft <= 14 ? 1 : 2,
-        companyId: company.id,
+        company_id: company.id,
       })
     }
 
     if (
-      company.healthScore <= 2 &&
+      company.health_score <= 2 &&
       !existingKeys.has(`HEALTH_DROP:${company.id}`)
     ) {
       toCreate.push({
         type: "HEALTH_DROP",
-        message: `${company.name}: health score dropped to ${company.healthScore}/5`,
+        message: `${company.name}: health score dropped to ${company.health_score}/5`,
         priority: 1,
-        companyId: company.id,
+        company_id: company.id,
       })
     }
 
-    const daysSinceActivity = company.lastActivityAt
-      ? differenceInDays(new Date(), new Date(company.lastActivityAt))
+    const daysSinceActivity = company.last_activity_at
+      ? differenceInDays(new Date(), new Date(company.last_activity_at))
       : null
 
     if (
@@ -83,37 +74,37 @@ export async function generateNotifications() {
         type: "NO_ACTIVITY",
         message: `${company.name}: no activity logged in ${daysSinceActivity ?? "30+"} days`,
         priority: 2,
-        companyId: company.id,
+        company_id: company.id,
       })
     }
   }
 
   for (const blocker of blockers) {
-    const daysSinceUpdate = differenceInDays(new Date(), new Date(blocker.updatedAt))
+    const daysSinceUpdate = differenceInDays(new Date(), new Date(blocker.updated_at))
     if (
       daysSinceUpdate > 5 &&
-      !existingKeys.has(`STALE_BLOCKER:${blocker.companyId}`)
+      !existingKeys.has(`STALE_BLOCKER:${blocker.company_id}`)
     ) {
       toCreate.push({
         type: "STALE_BLOCKER",
         message: `Stale blocker: "${blocker.title}" — no update in ${daysSinceUpdate} days`,
         priority: 2,
-        companyId: blocker.companyId,
+        company_id: blocker.company_id,
       })
     }
   }
 
   if (toCreate.length > 0) {
-    await prisma.notification.createMany({ data: toCreate })
+    await supabase.from("notification").insert(toCreate)
   }
 }
 
 export async function markNotificationRead(id: string) {
-  await prisma.notification.update({ where: { id }, data: { isRead: true } })
+  await supabase.from("notification").update({ is_read: true }).eq("id", id)
   revalidatePath("/")
 }
 
 export async function markAllNotificationsRead() {
-  await prisma.notification.updateMany({ where: { isRead: false }, data: { isRead: true } })
+  await supabase.from("notification").update({ is_read: true }).eq("is_read", false)
   revalidatePath("/")
 }

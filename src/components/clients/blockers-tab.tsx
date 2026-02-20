@@ -48,7 +48,7 @@ export function BlockersTab({ blockers, companyId }: Props) {
   const resolvedBlockers = blockers.filter((b) => b.status === "Resolved")
 
   const isStale = (blocker: Blocker) =>
-    differenceInDays(new Date(), new Date(blocker.updatedAt)) > 5
+    differenceInDays(new Date(), new Date(blocker.updated_at)) > 5
 
   const handleCreate = async () => {
     if (!form.title.trim() || !form.owner.trim()) return
@@ -144,7 +144,7 @@ export function BlockersTab({ blockers, companyId }: Props) {
         ) : (
           openBlockers.map((blocker) => {
             const stale = isStale(blocker)
-            const escalated = blocker.escalationLevel > 0
+            const escalated = blocker.escalation_level > 0
             return (
               <div
                 key={blocker.id}
@@ -175,13 +175,13 @@ export function BlockersTab({ blockers, companyId }: Props) {
                     </div>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
                       <span>Owner: {blocker.owner}</span>
-                      {blocker.resolutionDeadline && (
+                      {blocker.resolution_deadline && (
                         <span>
-                          Due: {format(new Date(blocker.resolutionDeadline), "MMM d, yyyy")}
+                          Due: {format(new Date(blocker.resolution_deadline), "MMM d, yyyy")}
                         </span>
                       )}
                       <span>
-                        Added {format(new Date(blocker.createdAt), "MMM d, yyyy")}
+                        Added {format(new Date(blocker.created_at), "MMM d, yyyy")}
                       </span>
                     </div>
                     {blocker.description && (
@@ -229,9 +229,9 @@ export function BlockersTab({ blockers, companyId }: Props) {
                       {blocker.title}
                     </span>
                     <StatusBadge status="Resolved" />
-                    {blocker.resolvedAt && (
+                    {blocker.resolved_at && (
                       <span className="text-xs text-muted-foreground">
-                        Resolved {format(new Date(blocker.resolvedAt), "MMM d, yyyy")}
+                        Resolved {format(new Date(blocker.resolved_at), "MMM d, yyyy")}
                       </span>
                     )}
                   </div>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase"
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
@@ -13,21 +13,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
   }
 
-  const company = await prisma.company.findUnique({
-    where: { name: companyName },
-  })
+  const { data: company } = await supabase
+    .from("company")
+    .select("id")
+    .eq("name", companyName)
+    .single()
 
   if (!company) {
     return NextResponse.json({ error: `Company '${companyName}' not found` }, { status: 404 })
   }
 
-  const log = await prisma.activityLog.create({
-    data: {
+  const { data: log } = await supabase
+    .from("activity_log")
+    .insert({
       content,
       type,
-      companyId: company.id,
-    },
-  })
+      company_id: company.id,
+    })
+    .select()
+    .single()
 
   return NextResponse.json(log, { status: 200 })
 }

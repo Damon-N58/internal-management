@@ -1,35 +1,50 @@
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ClientTable } from "@/components/dashboard/client-table"
 import { AttentionSection } from "@/components/dashboard/attention-section"
 import { generateNotifications } from "@/actions/notifications"
 import { addDays } from "date-fns"
+import type { Company, Deadline, ActivityLog, Blocker, Ticket } from "@/types"
+
+export type CompanyWithRelations = Company & {
+  deadline: Deadline[]
+  activity_log: ActivityLog[]
+  blocker: Blocker[]
+  ticket: Ticket[]
+}
 
 export default async function DashboardPage() {
-  await generateNotifications()
+  try {
+    await generateNotifications()
+  } catch {
+    // DB unavailable
+  }
 
-  const [companies, upcomingDeadlines, highPriorityPCRs] = await Promise.all([
-    prisma.company.findMany({
-      include: {
-        deadlines: true,
-        activityLogs: { take: 1, orderBy: { createdAt: "desc" } },
-        blockers: true,
-        tickets: true,
-      },
-      orderBy: { healthScore: "asc" },
-    }),
-    prisma.deadline.findMany({
-      where: { dueDate: { lte: addDays(new Date(), 7) } },
-    }),
-    prisma.productChangeRequest.findMany({
-      where: { priority: { lte: 2 }, status: { not: "Completed" } },
-    }),
-  ])
+  let companies: CompanyWithRelations[] = []
+  let upcomingDeadlines: Deadline[] = []
+
+  try {
+    const { data: companyData } = await supabase
+      .from("company")
+      .select("*, deadline(*), activity_log(*), blocker(*), ticket(*)")
+      .order("health_score", { ascending: true })
+
+    const sevenDaysOut = addDays(new Date(), 7).toISOString()
+    const { data: deadlineData } = await supabase
+      .from("deadline")
+      .select()
+      .lte("due_date", sevenDaysOut)
+
+    companies = (companyData ?? []) as unknown as CompanyWithRelations[]
+    upcomingDeadlines = deadlineData ?? []
+  } catch {
+    // DB unavailable — render empty state
+  }
 
   const activeClients = companies.filter((c) => c.status === "Active").length
   const pocClients = companies.filter((c) => c.status === "POC").length
   const totalOpenBlockers = companies.reduce(
-    (sum, c) => sum + c.blockers.filter((b) => b.status === "Open").length,
+    (sum, c) => sum + (c.blocker ?? []).filter((b) => b.status === "Open").length,
     0
   )
 

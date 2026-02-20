@@ -1,6 +1,6 @@
 "use server"
 
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase"
 import { revalidatePath } from "next/cache"
 import type { ActivityLogType } from "@/types"
 
@@ -9,15 +9,15 @@ export async function writeActivityLog(
   content: string,
   type: ActivityLogType
 ) {
-  await prisma.$transaction([
-    prisma.activityLog.create({
-      data: { content, type, companyId },
-    }),
-    prisma.company.update({
-      where: { id: companyId },
-      data: { lastActivityAt: new Date() },
-    }),
-  ])
+  await supabase.from("activity_log").insert({
+    content,
+    type,
+    company_id: companyId,
+  })
+  await supabase
+    .from("company")
+    .update({ last_activity_at: new Date().toISOString() })
+    .eq("id", companyId)
 }
 
 export async function createActivityLog(

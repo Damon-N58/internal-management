@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase"
 import { applyHealthScore } from "@/lib/apply-health-score"
 
 export async function POST(request: NextRequest) {
@@ -17,25 +17,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "conversationVolume must be a non-negative number" }, { status: 400 })
   }
 
-  const company = await prisma.company.findUnique({
-    where: { name: companyName },
-  })
+  const { data: company } = await supabase
+    .from("company")
+    .select("id")
+    .eq("name", companyName)
+    .single()
 
   if (!company) {
     return NextResponse.json({ error: `Company '${companyName}' not found` }, { status: 404 })
   }
 
-  await prisma.company.update({
-    where: { id: company.id },
-    data: { conversationVolume },
-  })
+  await supabase
+    .from("company")
+    .update({ conversation_volume: conversationVolume })
+    .eq("id", company.id)
 
-  await prisma.activityLog.create({
-    data: {
-      companyId: company.id,
-      content: `Usage data ingested: ${conversationVolume} conversations`,
-      type: "Automated",
-    },
+  await supabase.from("activity_log").insert({
+    company_id: company.id,
+    content: `Usage data ingested: ${conversationVolume} conversations`,
+    type: "Automated",
   })
 
   const result = await applyHealthScore(company.id)

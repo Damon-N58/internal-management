@@ -20,10 +20,10 @@ import { cn } from "@/lib/utils"
 import type { Company, Deadline, ActivityLog, Blocker, Ticket } from "@/types"
 
 type CompanyWithRelations = Company & {
-  deadlines: Deadline[]
-  activityLogs: ActivityLog[]
-  blockers: Blocker[]
-  tickets: Ticket[]
+  deadline: Deadline[]
+  activity_log: ActivityLog[]
+  blocker: Blocker[]
+  ticket: Ticket[]
 }
 
 type View = "all" | "sales" | "engineering"
@@ -91,10 +91,10 @@ export function ClientTable({ companies }: Props) {
             ) : (
               companies.map((company) => {
                 const nearExpiry =
-                  company.contractEndDate &&
-                  isBefore(new Date(company.contractEndDate), sixtyDaysOut)
-                const openBlockers = company.blockers.filter((b) => b.status === "Open").length
-                const openTickets = company.tickets.filter((t) => t.status !== "Closed").length
+                  company.contract_end_date &&
+                  isBefore(new Date(company.contract_end_date), sixtyDaysOut)
+                const openBlockers = company.blocker.filter((b) => b.status === "Open").length
+                const openTickets = company.ticket.filter((t) => t.status !== "Closed").length
 
                 return (
                   <TableRow
@@ -110,7 +110,7 @@ export function ClientTable({ companies }: Props) {
                       </Link>
                     </TableCell>
                     <TableCell>
-                      <HealthBadge score={company.healthScore} />
+                      <HealthBadge score={company.health_score} />
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={company.status} />
@@ -118,9 +118,9 @@ export function ClientTable({ companies }: Props) {
 
                     {view === "all" && (
                       <>
-                        <TableCell className="text-sm">{company.primaryCSM}</TableCell>
+                        <TableCell className="text-sm">{company.primary_csm}</TableCell>
                         <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
-                          {company.currentObjectives ?? "—"}
+                          {company.current_objectives ?? "—"}
                         </TableCell>
                         <TableCell>
                           {company.status === "POC" ? (
@@ -140,10 +140,10 @@ export function ClientTable({ companies }: Props) {
 
                     {view === "sales" && (
                       <>
-                        <TableCell className="text-sm">{company.primaryCSM}</TableCell>
+                        <TableCell className="text-sm">{company.primary_csm}</TableCell>
                         <TableCell className="text-sm">
-                          {company.contractEndDate
-                            ? format(new Date(company.contractEndDate), "MMM d, yyyy")
+                          {company.contract_end_date
+                            ? format(new Date(company.contract_end_date), "MMM d, yyyy")
                             : <span className="text-muted-foreground">—</span>}
                         </TableCell>
                         <TableCell>
@@ -173,7 +173,7 @@ export function ClientTable({ companies }: Props) {
 
                     {view === "engineering" && (
                       <>
-                        <TableCell className="text-sm">{company.implementationLead}</TableCell>
+                        <TableCell className="text-sm">{company.implementation_lead}</TableCell>
                         <TableCell>
                           {openBlockers > 0 ? (
                             <span className="inline-flex items-center rounded-full bg-red-100 border border-red-200 px-2 py-0.5 text-xs font-medium text-red-700">
@@ -187,8 +187,8 @@ export function ClientTable({ companies }: Props) {
                           {openTickets > 0 ? openTickets : "—"}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {company.lastActivityAt
-                            ? format(new Date(company.lastActivityAt), "MMM d")
+                          {company.last_activity_at
+                            ? format(new Date(company.last_activity_at), "MMM d")
                             : "Never"}
                         </TableCell>
                       </>

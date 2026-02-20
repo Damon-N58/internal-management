@@ -49,7 +49,7 @@ export function ActivityTab({ logs, companyId }: Props) {
               <div className="mb-2 flex items-center gap-2">
                 <StatusBadge status={log.type} />
                 <span className="text-xs text-muted-foreground">
-                  {format(new Date(log.createdAt), "MMM d, yyyy 'at' h:mm a")}
+                  {format(new Date(log.created_at), "MMM d, yyyy 'at' h:mm a")}
                 </span>
               </div>
               <p className="text-sm leading-relaxed">{log.content}</p>

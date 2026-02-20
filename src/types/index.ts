@@ -1,15 +1,15 @@
-export type {
-  Company,
-  TechnicalVault,
-  ActivityLog,
-  Ticket,
-  Deadline,
-  ProductChangeRequest,
-  Blocker,
-  KnowledgeBaseEntry,
-  Notification,
-  HealthScoreLog,
-} from "@prisma/client"
+import type { Database } from "./database"
+
+export type Company = Database["public"]["Tables"]["company"]["Row"]
+export type TechnicalVault = Database["public"]["Tables"]["technical_vault"]["Row"]
+export type ActivityLog = Database["public"]["Tables"]["activity_log"]["Row"]
+export type Ticket = Database["public"]["Tables"]["ticket"]["Row"]
+export type Deadline = Database["public"]["Tables"]["deadline"]["Row"]
+export type ProductChangeRequest = Database["public"]["Tables"]["product_change_request"]["Row"]
+export type Blocker = Database["public"]["Tables"]["blocker"]["Row"]
+export type KnowledgeBaseEntry = Database["public"]["Tables"]["knowledge_base_entry"]["Row"]
+export type Notification = Database["public"]["Tables"]["notification"]["Row"]
+export type HealthScoreLog = Database["public"]["Tables"]["health_score_log"]["Row"]
 
 export type CompanyStatus = "POC" | "Implementation" | "Active" | "Churn Risk"
 export type TicketStatus = "Open" | "Blocked" | "Closed"

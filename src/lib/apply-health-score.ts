@@ -1,69 +1,62 @@
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase"
 import { computeHealthScore } from "@/lib/health-score"
 import { differenceInDays } from "date-fns"
 
 export async function applyHealthScore(companyId: string) {
-  const company = await prisma.company.findUnique({
-    where: { id: companyId },
-    select: {
-      healthScore: true,
-      lastActivityAt: true,
-      conversationVolume: true,
-      _count: {
-        select: {
-          blockers: { where: { status: "Open" } },
-        },
-      },
-    },
-  })
+  const { data: company } = await supabase
+    .from("company")
+    .select("health_score, last_activity_at, conversation_volume")
+    .eq("id", companyId)
+    .single()
 
   if (!company) return null
 
-  const openPCRCount = await prisma.productChangeRequest.count({
-    where: { status: { not: "Completed" } },
-  })
+  const { count: openBlockerCount } = await supabase
+    .from("blocker")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId)
+    .eq("status", "Open")
 
-  const daysSinceLastActivity = company.lastActivityAt
-    ? differenceInDays(new Date(), company.lastActivityAt)
+  const { count: openPCRCount } = await supabase
+    .from("product_change_request")
+    .select("id", { count: "exact", head: true })
+    .neq("status", "Completed")
+
+  const daysSinceLastActivity = company.last_activity_at
+    ? differenceInDays(new Date(), new Date(company.last_activity_at))
     : null
 
   const result = computeHealthScore({
-    openBlockerCount: company._count.blockers,
+    openBlockerCount: openBlockerCount ?? 0,
     daysSinceLastActivity,
-    openPCRCount,
-    conversationVolume: company.conversationVolume,
+    openPCRCount: openPCRCount ?? 0,
+    conversationVolume: company.conversation_volume,
   })
 
-  const oldScore = company.healthScore
+  const oldScore = company.health_score
 
-  await prisma.$transaction([
-    prisma.company.update({
-      where: { id: companyId },
-      data: { healthScore: result.score },
-    }),
-    prisma.healthScoreLog.create({
-      data: {
-        companyId,
-        score: result.score,
-        breakdown: result.breakdown,
-      },
-    }),
-    ...(oldScore !== result.score
-      ? [
-          prisma.activityLog.create({
-            data: {
-              companyId,
-              content: `Health score updated: ${oldScore} → ${result.score}`,
-              type: "Automated",
-            },
-          }),
-          prisma.company.update({
-            where: { id: companyId },
-            data: { lastActivityAt: new Date() },
-          }),
-        ]
-      : []),
-  ])
+  await supabase
+    .from("company")
+    .update({ health_score: result.score })
+    .eq("id", companyId)
+
+  await supabase.from("health_score_log").insert({
+    company_id: companyId,
+    score: result.score,
+    breakdown: result.breakdown,
+  })
+
+  if (oldScore !== result.score) {
+    await supabase.from("activity_log").insert({
+      company_id: companyId,
+      content: `Health score updated: ${oldScore} → ${result.score}`,
+      type: "Automated",
+    })
+    await supabase
+      .from("company")
+      .update({ last_activity_at: new Date().toISOString() })
+      .eq("id", companyId)
+  }
 
   return result
 }

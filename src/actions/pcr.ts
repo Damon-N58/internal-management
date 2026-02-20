@@ -1,6 +1,6 @@
 "use server"
 
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase"
 import { revalidatePath } from "next/cache"
 import type { PCRIssueType, PCRLocation } from "@/types"
 
@@ -15,21 +15,36 @@ type CreatePCRData = {
 }
 
 export async function createPCR(data: CreatePCRData) {
-  const pcr = await prisma.productChangeRequest.create({
-    data: { ...data, status: "Requested" },
-  })
+  const { data: pcr } = await supabase
+    .from("product_change_request")
+    .insert({
+      issue: data.issue,
+      description: data.description,
+      location: data.location,
+      priority: data.priority,
+      requested_by: data.requestedBy,
+      assigned_to: data.assignedTo ?? null,
+      deadline: data.deadline?.toISOString() ?? null,
+      status: "Requested",
+    })
+    .select()
+    .single()
+
   revalidatePath("/product")
   return pcr
 }
 
 export async function updatePCRStatus(pcrId: string, status: string) {
-  const pcr = await prisma.productChangeRequest.update({
-    where: { id: pcrId },
-    data: {
+  const { data: pcr } = await supabase
+    .from("product_change_request")
+    .update({
       status,
-      completedAt: status === "Completed" ? new Date() : null,
-    },
-  })
+      completed_at: status === "Completed" ? new Date().toISOString() : null,
+    })
+    .eq("id", pcrId)
+    .select()
+    .single()
+
   revalidatePath("/product")
   return pcr
 }

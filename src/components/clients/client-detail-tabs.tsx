@@ -18,19 +18,19 @@ import type {
 } from "@/types"
 
 export type FullCompany = Company & {
-  vault: TechnicalVault | null
-  tickets: Ticket[]
-  activityLogs: ActivityLog[]
-  deadlines: Deadline[]
-  blockers: Blocker[]
-  knowledgeBase: KnowledgeBaseEntry[]
+  technical_vault: TechnicalVault | null
+  ticket: Ticket[]
+  activity_log: ActivityLog[]
+  deadline: Deadline[]
+  blocker: Blocker[]
+  knowledge_base_entry: KnowledgeBaseEntry[]
 }
 
 type Props = { company: FullCompany }
 
 export function ClientDetailTabs({ company }: Props) {
-  const openBlockerCount = company.blockers.filter((b) => b.status === "Open").length
-  const openTicketCount = company.tickets.filter((t) => t.status !== "Closed").length
+  const openBlockerCount = company.blocker.filter((b) => b.status === "Open").length
+  const openTicketCount = company.ticket.filter((t) => t.status !== "Closed").length
 
   return (
     <Tabs defaultValue="overview">
@@ -54,9 +54,9 @@ export function ClientDetailTabs({ company }: Props) {
         </TabsTrigger>
         <TabsTrigger value="activity">
           Activity
-          {company.activityLogs.length > 0 && (
+          {company.activity_log.length > 0 && (
             <span className="ml-1.5 rounded-full bg-slate-200 px-1.5 py-0.5 text-xs">
-              {company.activityLogs.length}
+              {company.activity_log.length}
             </span>
           )}
         </TabsTrigger>
@@ -68,19 +68,19 @@ export function ClientDetailTabs({ company }: Props) {
         <OverviewTab company={company} />
       </TabsContent>
       <TabsContent value="blockers" className="mt-6">
-        <BlockersTab blockers={company.blockers} companyId={company.id} />
+        <BlockersTab blockers={company.blocker} companyId={company.id} />
       </TabsContent>
       <TabsContent value="tickets" className="mt-6">
-        <TicketsTab tickets={company.tickets} companyId={company.id} />
+        <TicketsTab tickets={company.ticket} companyId={company.id} />
       </TabsContent>
       <TabsContent value="activity" className="mt-6">
-        <ActivityTab logs={company.activityLogs} companyId={company.id} />
+        <ActivityTab logs={company.activity_log} companyId={company.id} />
       </TabsContent>
       <TabsContent value="vault" className="mt-6">
-        <VaultTab vault={company.vault} companyId={company.id} />
+        <VaultTab vault={company.technical_vault} companyId={company.id} />
       </TabsContent>
       <TabsContent value="knowledge" className="mt-6">
-        <KnowledgeBaseTab entries={company.knowledgeBase} companyId={company.id} />
+        <KnowledgeBaseTab entries={company.knowledge_base_entry} companyId={company.id} />
       </TabsContent>
     </Tabs>
   )

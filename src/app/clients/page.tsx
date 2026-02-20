@@ -1,13 +1,14 @@
-import { prisma } from "@/lib/prisma"
+import { supabase } from "@/lib/supabase"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { HealthBadge } from "@/components/health-badge"
 import { StatusBadge } from "@/components/status-badge"
 
 export default async function ClientsPage() {
-  const companies = await prisma.company.findMany({
-    orderBy: { name: "asc" },
-  })
+  const { data: companies } = await supabase
+    .from("company")
+    .select()
+    .order("name", { ascending: true })
 
   return (
     <div className="space-y-6">
@@ -16,7 +17,7 @@ export default async function ClientsPage() {
         <p className="text-muted-foreground">All managed client accounts</p>
       </div>
       <div className="grid gap-3">
-        {companies.length === 0 ? (
+        {!companies || companies.length === 0 ? (
           <p className="text-sm text-muted-foreground">No clients yet.</p>
         ) : (
           companies.map((company) => (
@@ -26,11 +27,11 @@ export default async function ClientsPage() {
                   <div>
                     <span className="font-medium">{company.name}</span>
                     <span className="ml-3 text-sm text-muted-foreground">
-                      {company.primaryCSM}
+                      {company.primary_csm}
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <HealthBadge score={company.healthScore} />
+                    <HealthBadge score={company.health_score} />
                     <StatusBadge status={company.status} />
                   </div>
                 </CardContent>

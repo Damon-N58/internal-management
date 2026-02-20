@@ -7,17 +7,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import type { Company, TechnicalVault, ActivityLog, Deadline, Blocker } from "@/types"
 
 type FullCompany = Company & {
-  vault: TechnicalVault | null
-  activityLogs: ActivityLog[]
-  deadlines: Deadline[]
-  blockers: Blocker[]
+  technical_vault: TechnicalVault | null
+  activity_log: ActivityLog[]
+  deadline: Deadline[]
+  blocker: Blocker[]
 }
 
 export function OverviewTab({ company }: { company: FullCompany }) {
   const [handoffOpen, setHandoffOpen] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  const openBlockers = company.blockers.filter((b) => b.status === "Open")
+  const openBlockers = company.blocker.filter((b) => b.status === "Open")
   const handoffMarkdown = generateHandoffMarkdown(company)
 
   const handleCopy = () => {
@@ -29,14 +29,14 @@ export function OverviewTab({ company }: { company: FullCompany }) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
-        <Section title="Current Objectives" content={company.currentObjectives} />
-        <Section title="Future Work" content={company.futureWork} />
+        <Section title="Current Objectives" content={company.current_objectives} />
+        <Section title="Future Work" content={company.future_work} />
       </div>
 
       <div className="rounded-lg border bg-white p-4">
         <h3 className="mb-2 text-sm font-semibold text-slate-700">Active Blockers</h3>
         {openBlockers.length === 0 ? (
-          <p className="text-sm text-green-700">✓ No open blockers</p>
+          <p className="text-sm text-green-700">No open blockers</p>
         ) : (
           <div className="space-y-1">
             {openBlockers.map((b) => (
@@ -53,18 +53,18 @@ export function OverviewTab({ company }: { company: FullCompany }) {
         )}
       </div>
 
-      {company.deadlines.length > 0 && (
+      {company.deadline.length > 0 && (
         <div>
           <h3 className="mb-3 font-semibold text-sm">Upcoming Deadlines</h3>
           <ul className="space-y-2">
-            {company.deadlines.map((d) => (
+            {company.deadline.map((d) => (
               <li
                 key={d.id}
                 className="flex items-center justify-between rounded border bg-white px-4 py-2.5 text-sm"
               >
                 <span>{d.description}</span>
                 <span className="text-muted-foreground">
-                  {format(new Date(d.dueDate), "MMM d, yyyy")}
+                  {format(new Date(d.due_date), "MMM d, yyyy")}
                 </span>
               </li>
             ))}
@@ -111,15 +111,15 @@ function Section({
 }
 
 function generateHandoffMarkdown(company: FullCompany): string {
-  const recentLogs = company.activityLogs.slice(0, 3)
-  const openBlockers = company.blockers.filter((b) => b.status === "Open")
+  const recentLogs = company.activity_log.slice(0, 3)
+  const openBlockers = company.blocker.filter((b) => b.status === "Open")
 
-  const vaultSummary = company.vault
+  const vaultSummary = company.technical_vault
     ? [
-        `- FTP: ${company.vault.ftpInfo ? "Configured ✓" : "Not set"}`,
-        `- API Keys: ${company.vault.apiKeys ? "Configured ✓" : "Not set"}`,
-        `- SSH: ${company.vault.sshConfig ? "Configured ✓" : "Not set"}`,
-        `- Other: ${company.vault.otherSecrets ? "Configured ✓" : "Not set"}`,
+        `- FTP: ${company.technical_vault.ftp_info ? "Configured" : "Not set"}`,
+        `- API Keys: ${company.technical_vault.api_keys ? "Configured" : "Not set"}`,
+        `- SSH: ${company.technical_vault.ssh_config ? "Configured" : "Not set"}`,
+        `- Other: ${company.technical_vault.other_secrets ? "Configured" : "Not set"}`,
       ].join("\n")
     : "No vault configured."
 
@@ -131,9 +131,9 @@ function generateHandoffMarkdown(company: FullCompany): string {
       : "No open blockers."
 
   const deadlineLines =
-    company.deadlines.length > 0
-      ? company.deadlines
-          .map((d) => `- ${d.description} — due ${format(new Date(d.dueDate), "MMM d, yyyy")}`)
+    company.deadline.length > 0
+      ? company.deadline
+          .map((d) => `- ${d.description} — due ${format(new Date(d.due_date), "MMM d, yyyy")}`)
           .join("\n")
       : "No upcoming deadlines."
 
@@ -142,7 +142,7 @@ function generateHandoffMarkdown(company: FullCompany): string {
       ? recentLogs
           .map(
             (l) =>
-              `- [${l.type}] ${format(new Date(l.createdAt), "MMM d, yyyy")}: ${l.content}`
+              `- [${l.type}] ${format(new Date(l.created_at), "MMM d, yyyy")}: ${l.content}`
           )
           .join("\n")
       : "No recent activity."
@@ -151,20 +151,20 @@ function generateHandoffMarkdown(company: FullCompany): string {
 Generated: ${format(new Date(), "MMMM d, yyyy 'at' h:mm a")}
 
 ## Status
-- Health Score: ${company.healthScore}/5
+- Health Score: ${company.health_score}/5
 - Account Status: ${company.status}
-- Primary CSM: ${company.primaryCSM}
-- Implementation Lead: ${company.implementationLead}
-${company.secondLead ? `- Second Lead: ${company.secondLead}` : ""}
+- Primary CSM: ${company.primary_csm}
+- Implementation Lead: ${company.implementation_lead}
+${company.second_lead ? `- Second Lead: ${company.second_lead}` : ""}
 
 ## Current Objectives
-${company.currentObjectives ?? "None recorded."}
+${company.current_objectives ?? "None recorded."}
 
 ## Active Blockers
 ${blockerLines}
 
 ## Future Work
-${company.futureWork ?? "None recorded."}
+${company.future_work ?? "None recorded."}
 
 ## Upcoming Deadlines
 ${deadlineLines}

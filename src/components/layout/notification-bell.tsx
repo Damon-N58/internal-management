@@ -90,7 +90,7 @@ export function NotificationBell({ notifications, unreadCount }: Props) {
                     <div
                       key={notification.id}
                       className={`flex items-start gap-3 px-4 py-3 border-b last:border-b-0 transition-colors ${
-                        !notification.isRead ? "bg-blue-50" : ""
+                        !notification.is_read ? "bg-blue-50" : ""
                       }`}
                     >
                       <Icon className={`h-4 w-4 mt-0.5 shrink-0 ${config.color}`} />
@@ -100,12 +100,12 @@ export function NotificationBell({ notifications, unreadCount }: Props) {
                         </p>
                         <p className="text-sm leading-snug">{notification.message}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(notification.createdAt), {
+                          {formatDistanceToNow(new Date(notification.created_at), {
                             addSuffix: true,
                           })}
                         </p>
                       </div>
-                      {!notification.isRead && (
+                      {!notification.is_read && (
                         <button
                           onClick={() => handleMarkRead(notification.id)}
                           className="shrink-0 mt-0.5 text-muted-foreground hover:text-slate-900"

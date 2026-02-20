@@ -13,15 +13,15 @@ type Props = {
 }
 
 type VaultField = {
-  key: keyof Pick<TechnicalVault, "ftpInfo" | "apiKeys" | "sshConfig" | "otherSecrets">
+  key: keyof Pick<TechnicalVault, "ftp_info" | "api_keys" | "ssh_config" | "other_secrets">
   label: string
 }
 
 const vaultFields: VaultField[] = [
-  { key: "ftpInfo", label: "FTP Info" },
-  { key: "apiKeys", label: "API Keys" },
-  { key: "sshConfig", label: "SSH Config" },
-  { key: "otherSecrets", label: "Other Secrets" },
+  { key: "ftp_info", label: "FTP Info" },
+  { key: "api_keys", label: "API Keys" },
+  { key: "ssh_config", label: "SSH Config" },
+  { key: "other_secrets", label: "Other Secrets" },
 ]
 
 export function VaultTab({ vault }: Props) {

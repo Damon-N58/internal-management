@@ -165,7 +165,7 @@ export function KnowledgeBaseTab({ entries, companyId }: Props) {
                     </p>
                   )}
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Added {format(new Date(entry.createdAt), "MMM d, yyyy")}
+                    Added {format(new Date(entry.created_at), "MMM d, yyyy")}
                   </p>
                 </div>
                 <Button
