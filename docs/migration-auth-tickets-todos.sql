@@ -1,6 +1,9 @@
 -- ============================================================
 -- Migration: Auth, Tickets, To-Dos, Google Drive
 -- Run this in the Supabase SQL Editor BEFORE deploying the new code
+--
+-- NOTE: Existing tables (company, ticket, etc.) use TEXT ids from
+-- Prisma's cuid(). New tables referencing them must also use TEXT.
 -- ============================================================
 
 -- 1. Profile table (mirrors auth.users)
@@ -28,10 +31,11 @@ create trigger on_auth_user_created
   for each row execute function public.handle_new_user();
 
 -- 2. User ↔ Company assignment junction table
+-- company.id is TEXT (Prisma cuid), so company_id must also be TEXT
 create table if not exists public.user_company_assignment (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profile(id) on delete cascade,
-  company_id uuid not null references public.company(id) on delete cascade,
+  company_id text not null references public.company(id) on delete cascade,
   created_at timestamptz not null default now(),
   unique(user_id, company_id)
 );
@@ -40,16 +44,24 @@ create index if not exists idx_uca_user on public.user_company_assignment(user_i
 create index if not exists idx_uca_company on public.user_company_assignment(company_id);
 
 -- 3. Expand ticket table
+-- assigned_to references profile (uuid), that's fine
 alter table public.ticket
   add column if not exists description text,
   add column if not exists assigned_to uuid references public.profile(id) on delete set null,
-  add column if not exists priority int not null default 3 check (priority between 1 and 5),
+  add column if not exists priority int not null default 3,
   add column if not exists due_date date;
 
+-- Add check constraint separately (add column if not exists + check in one statement can fail)
+do $$ begin
+  alter table public.ticket add constraint ticket_priority_check check (priority between 1 and 5);
+exception when duplicate_object then null;
+end $$;
+
 -- 4. Ticket comments table
+-- ticket.id is TEXT (Prisma cuid), so ticket_id must be TEXT
 create table if not exists public.ticket_comment (
   id uuid primary key default gen_random_uuid(),
-  ticket_id uuid not null references public.ticket(id) on delete cascade,
+  ticket_id text not null references public.ticket(id) on delete cascade,
   author_id uuid not null references public.profile(id) on delete cascade,
   content text not null,
   created_at timestamptz not null default now()
