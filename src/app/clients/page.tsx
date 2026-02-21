@@ -4,10 +4,12 @@ import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { HealthBadge } from "@/components/health-badge"
 import { StatusBadge } from "@/components/status-badge"
+import { AddCompanyDialog } from "@/components/clients/add-company-dialog"
 
 export default async function ClientsPage() {
   const profile = await requireAuth()
-  const companyIds = isAdmin(profile) ? null : await getUserCompanyIds(profile.id)
+  const admin = isAdmin(profile)
+  const companyIds = admin ? null : await getUserCompanyIds(profile.id)
 
   let query = supabase
     .from("company")
@@ -22,11 +24,14 @@ export default async function ClientsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Clients</h2>
-        <p className="text-muted-foreground">
-          {isAdmin(profile) ? "All managed client accounts" : "Your assigned client accounts"}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Clients</h2>
+          <p className="text-muted-foreground">
+            {admin ? "All managed client accounts" : "Your assigned client accounts"}
+          </p>
+        </div>
+        {admin && <AddCompanyDialog />}
       </div>
       <div className="grid gap-3">
         {!companies || companies.length === 0 ? (

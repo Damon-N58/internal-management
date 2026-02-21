@@ -38,6 +38,34 @@ export async function updateGoogleDriveUrl(companyId: string, url: string) {
   revalidatePath(`/clients/${companyId}`)
 }
 
+export async function createCompany(data: {
+  name: string
+  status: string
+  primary_csm: string
+  implementation_lead: string
+  contract_end_date?: string
+}) {
+  const id = crypto.randomUUID().replace(/-/g, "").slice(0, 25)
+
+  const { error } = await supabase.from("company").insert({
+    id,
+    name: data.name,
+    status: data.status,
+    primary_csm: data.primary_csm,
+    implementation_lead: data.implementation_lead,
+    contract_end_date: data.contract_end_date || null,
+    health_score: 5,
+    priority: 3,
+  })
+
+  if (error) throw new Error(error.message)
+
+  await writeActivityLog(id, `Company "${data.name}" created`, "Automated")
+  revalidatePath("/")
+  revalidatePath("/clients")
+  return id
+}
+
 export async function recalculateCompanyHealth(companyId: string) {
   const result = await applyHealthScore(companyId)
   revalidatePath("/")

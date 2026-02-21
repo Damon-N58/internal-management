@@ -6,7 +6,6 @@ import { SettingsTabs } from "@/components/settings/settings-tabs"
 
 export default async function SettingsPage() {
   const profile = await requireAuth()
-  const profiles = await getAllProfiles()
   const admin = isAdmin(profile)
   const managerOrAbove = isManagerOrAbove(profile)
 
@@ -14,13 +13,33 @@ export default async function SettingsPage() {
   let companies: { id: string; name: string }[] = []
 
   if (admin) {
-    assignments = await getAssignments()
-    const { data } = await supabase
-      .from("company")
-      .select("id, name")
-      .order("name", { ascending: true })
-    companies = (data ?? []) as { id: string; name: string }[]
+    const [profiles, assignmentsData, { data: companyData }] = await Promise.all([
+      getAllProfiles(),
+      getAssignments(),
+      supabase.from("company").select("id, name").order("name", { ascending: true }),
+    ])
+    assignments = assignmentsData
+    companies = (companyData ?? []) as { id: string; name: string }[]
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
+          <p className="text-muted-foreground">Portal configuration and team management</p>
+        </div>
+        <SettingsTabs
+          profile={profile}
+          profiles={profiles}
+          assignments={assignments}
+          companies={companies}
+          isAdmin={admin}
+          isManagerOrAbove={managerOrAbove}
+        />
+      </div>
+    )
   }
+
+  const profiles = await getAllProfiles()
 
   return (
     <div className="space-y-6">
@@ -28,7 +47,6 @@ export default async function SettingsPage() {
         <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
         <p className="text-muted-foreground">Portal configuration and team management</p>
       </div>
-
       <SettingsTabs
         profile={profile}
         profiles={profiles}

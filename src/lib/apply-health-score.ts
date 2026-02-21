@@ -3,24 +3,25 @@ import { computeHealthScore } from "@/lib/health-score"
 import { differenceInDays } from "date-fns"
 
 export async function applyHealthScore(companyId: string) {
-  const { data: company } = await supabase
-    .from("company")
-    .select("health_score, last_activity_at, conversation_volume")
-    .eq("id", companyId)
-    .single()
+  const [{ data: company }, { count: openBlockerCount }, { count: openPCRCount }] =
+    await Promise.all([
+      supabase
+        .from("company")
+        .select("health_score, last_activity_at, conversation_volume")
+        .eq("id", companyId)
+        .single(),
+      supabase
+        .from("blocker")
+        .select("id", { count: "exact", head: true })
+        .eq("company_id", companyId)
+        .eq("status", "Open"),
+      supabase
+        .from("product_change_request")
+        .select("id", { count: "exact", head: true })
+        .neq("status", "Completed"),
+    ])
 
   if (!company) return null
-
-  const { count: openBlockerCount } = await supabase
-    .from("blocker")
-    .select("id", { count: "exact", head: true })
-    .eq("company_id", companyId)
-    .eq("status", "Open")
-
-  const { count: openPCRCount } = await supabase
-    .from("product_change_request")
-    .select("id", { count: "exact", head: true })
-    .neq("status", "Completed")
 
   const daysSinceLastActivity = company.last_activity_at
     ? differenceInDays(new Date(), new Date(company.last_activity_at))

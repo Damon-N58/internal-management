@@ -23,22 +23,23 @@ export default async function ClientDetailPage({ params }: Props) {
     if (!companyIds.includes(id)) notFound()
   }
 
-  await escalateStaleBlockers()
+  escalateStaleBlockers().catch(() => {})
 
-  const { data: company } = await supabase
-    .from("company")
-    .select(
-      "*, technical_vault(*), ticket(*), activity_log(*), deadline(*), blocker(*), knowledge_base_entry(*)"
-    )
-    .eq("id", id)
-    .single()
+  const [{ data: company }, { data: teamMembers }] = await Promise.all([
+    supabase
+      .from("company")
+      .select(
+        "*, technical_vault(*), ticket(*), activity_log(*), deadline(*), blocker(*), knowledge_base_entry(*)"
+      )
+      .eq("id", id)
+      .single(),
+    supabase
+      .from("user_company_assignment")
+      .select("user_id, profile:user_id(id, full_name, email)")
+      .eq("company_id", id),
+  ])
 
   if (!company) notFound()
-
-  const { data: teamMembers } = await supabase
-    .from("user_company_assignment")
-    .select("user_id, profile:user_id(id, full_name, email)")
-    .eq("company_id", id)
 
   const assignableUsers = (teamMembers ?? []).map((m) => {
     const p = m.profile as unknown as Profile

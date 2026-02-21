@@ -18,26 +18,16 @@ export default async function DashboardPage() {
   const profile = await requireAuth()
   const companyIds = isAdmin(profile) ? null : await getUserCompanyIds(profile.id)
 
-  try {
-    await generateNotifications()
-  } catch {
-    // DB unavailable
-  }
+  generateNotifications().catch(() => {})
 
   let companies: CompanyWithRelations[] = []
   let upcomingDeadlines: Deadline[] = []
 
   try {
-    let query = supabase
+    let companyQuery = supabase
       .from("company")
       .select("*, deadline(*), activity_log(*), blocker(*), ticket(*)")
       .order("health_score", { ascending: true })
-
-    if (companyIds) {
-      query = query.in("id", companyIds)
-    }
-
-    const { data: companyData } = await query
 
     const sevenDaysOut = addDays(new Date(), 7).toISOString()
     let deadlineQuery = supabase
@@ -46,10 +36,14 @@ export default async function DashboardPage() {
       .lte("due_date", sevenDaysOut)
 
     if (companyIds) {
+      companyQuery = companyQuery.in("id", companyIds)
       deadlineQuery = deadlineQuery.in("company_id", companyIds)
     }
 
-    const { data: deadlineData } = await deadlineQuery
+    const [{ data: companyData }, { data: deadlineData }] = await Promise.all([
+      companyQuery,
+      deadlineQuery,
+    ])
 
     companies = (companyData ?? []) as unknown as CompanyWithRelations[]
     upcomingDeadlines = deadlineData ?? []

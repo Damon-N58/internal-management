@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { LayoutDashboard, Users, ClipboardList, Settings, LogOut } from "lucide-react"
+import { LayoutDashboard, Users, ClipboardList, Settings, LogOut, Ticket } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase-browser"
 import type { ReactNode } from "react"
@@ -11,6 +11,7 @@ import type { Profile } from "@/types"
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/clients", label: "Clients", icon: Users },
+  { href: "/tickets", label: "Tickets", icon: Ticket },
   { href: "/product", label: "Product Roadmap", icon: ClipboardList },
   { href: "/settings", label: "Settings", icon: Settings },
 ]
