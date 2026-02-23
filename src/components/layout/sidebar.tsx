@@ -1,12 +1,29 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
-import { LayoutDashboard, Users, ClipboardList, Settings, LogOut, Ticket } from "lucide-react"
+import {
+  LayoutDashboard,
+  Users,
+  ClipboardList,
+  Settings,
+  LogOut,
+  Ticket,
+  ChevronDown,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase-browser"
+import { getFaviconUrl } from "@/lib/favicon"
 import type { ReactNode } from "react"
 import type { Profile } from "@/types"
+
+type AssignedCompany = {
+  id: string
+  name: string
+  website: string | null
+}
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -20,12 +37,14 @@ type Props = {
   profile: Profile
   notificationBell?: ReactNode
   todoButton?: ReactNode
+  assignedCompanies?: AssignedCompany[]
 }
 
-export function Sidebar({ profile, notificationBell, todoButton }: Props) {
+export function Sidebar({ profile, notificationBell, todoButton, assignedCompanies = [] }: Props) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
+  const [clientsExpanded, setClientsExpanded] = useState(false)
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -45,24 +64,82 @@ export function Sidebar({ profile, notificationBell, todoButton }: Props) {
           {notificationBell}
         </div>
       </div>
-      <nav className="flex flex-col gap-1 flex-1">
+      <nav className="flex flex-col gap-1 flex-1 overflow-y-auto">
         {navItems.map(({ href, label, icon: Icon }) => {
           const isActive =
             href === "/" ? pathname === "/" : pathname.startsWith(href)
+          const isClients = href === "/clients"
+
           return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-slate-100 text-slate-900"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+            <div key={href}>
+              <div className="flex items-center">
+                <Link
+                  href={href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors flex-1",
+                    isActive
+                      ? "bg-slate-100 text-slate-900"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </Link>
+                {isClients && assignedCompanies.length > 0 && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setClientsExpanded(!clientsExpanded)
+                    }}
+                    className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                  >
+                    <ChevronDown
+                      className={cn(
+                        "h-3.5 w-3.5 transition-transform",
+                        clientsExpanded && "rotate-180"
+                      )}
+                    />
+                  </button>
+                )}
+              </div>
+              {isClients && clientsExpanded && assignedCompanies.length > 0 && (
+                <div className="ml-4 mt-0.5 mb-1 space-y-0.5">
+                  {assignedCompanies.map((company) => {
+                    const favicon = getFaviconUrl(company.website)
+                    const isCompanyActive = pathname === `/clients/${company.id}`
+                    return (
+                      <Link
+                        key={company.id}
+                        href={`/clients/${company.id}`}
+                        className={cn(
+                          "flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                          isCompanyActive
+                            ? "bg-slate-100 text-slate-900"
+                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                        )}
+                      >
+                        {favicon ? (
+                          <Image
+                            src={favicon}
+                            alt=""
+                            width={14}
+                            height={14}
+                            className="rounded-sm shrink-0"
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="h-3.5 w-3.5 rounded-sm bg-slate-200 flex items-center justify-center text-[8px] font-bold text-slate-500 shrink-0">
+                            {company.name.charAt(0)}
+                          </div>
+                        )}
+                        <span className="truncate">{company.name}</span>
+                      </Link>
+                    )
+                  })}
+                </div>
               )}
-            >
-              <Icon className="h-4 w-4" />
-              {label}
-            </Link>
+            </div>
           )
         })}
       </nav>

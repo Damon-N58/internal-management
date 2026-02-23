@@ -22,6 +22,7 @@ export type Database = {
           last_activity_at: string | null
           conversation_volume: number | null
           google_drive_url: string | null
+          website: string | null
           created_at: string
           updated_at: string
         }
@@ -43,6 +44,7 @@ export type Database = {
           last_activity_at?: string | null
           conversation_volume?: number | null
           google_drive_url?: string | null
+          website?: string | null
         }
         Update: Partial<Database["public"]["Tables"]["company"]["Insert"]>
         Relationships: [

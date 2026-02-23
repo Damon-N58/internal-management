@@ -30,6 +30,7 @@ export async function createTicket(companyId: string, data: CreateTicketData) {
 
   await writeActivityLog(companyId, `Ticket created: "${data.title}"`, "Automated")
   revalidatePath(`/clients/${companyId}`)
+  revalidatePath("/tickets")
   return ticket
 }
 
@@ -47,6 +48,7 @@ export async function updateTicketStatus(ticketId: string, companyId: string, st
     "Automated"
   )
   revalidatePath(`/clients/${companyId}`)
+  revalidatePath("/tickets")
   return ticket
 }
 

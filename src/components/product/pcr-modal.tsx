@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { useRouter } from "next/navigation"
 import { createPCR } from "@/actions/pcr"
 import type { PCRIssueType, PCRLocation } from "@/types"
 
@@ -38,6 +39,7 @@ const defaultForm = {
 export function PCRModal({ open, onClose }: Props) {
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState(defaultForm)
+  const router = useRouter()
 
   const handleSubmit = async () => {
     if (!form.description.trim() || !form.requestedBy.trim()) return
@@ -46,9 +48,10 @@ export function PCRModal({ open, onClose }: Props) {
       ...form,
       assignedTo: form.assignedTo.trim() || undefined,
     })
-    setLoading(false)
     setForm(defaultForm)
+    setLoading(false)
     onClose()
+    router.refresh()
   }
 
   return (

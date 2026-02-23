@@ -5,7 +5,8 @@ import { Sidebar } from "@/components/layout/sidebar"
 import { NotificationBellWrapper } from "@/components/layout/notification-bell-wrapper"
 import { TodoButtonWrapper } from "@/components/layout/todo-button-wrapper"
 import { Toaster } from "@/components/ui/sonner"
-import { getCurrentUser } from "@/lib/auth"
+import { getCurrentUser, getUserCompanyIds, isAdmin } from "@/lib/auth"
+import { supabase } from "@/lib/supabase"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,6 +30,28 @@ export default async function RootLayout({
 }>) {
   const profile = await getCurrentUser()
 
+  let assignedCompanies: { id: string; name: string; website: string | null }[] = []
+
+  if (profile) {
+    if (isAdmin(profile)) {
+      const { data } = await supabase
+        .from("company")
+        .select("id, name, website")
+        .order("name", { ascending: true })
+      assignedCompanies = (data ?? []) as typeof assignedCompanies
+    } else {
+      const companyIds = await getUserCompanyIds(profile.id)
+      if (companyIds.length > 0) {
+        const { data } = await supabase
+          .from("company")
+          .select("id, name, website")
+          .in("id", companyIds)
+          .order("name", { ascending: true })
+        assignedCompanies = (data ?? []) as typeof assignedCompanies
+      }
+    }
+  }
+
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
@@ -38,6 +61,7 @@ export default async function RootLayout({
               profile={profile}
               notificationBell={<NotificationBellWrapper />}
               todoButton={<TodoButtonWrapper />}
+              assignedCompanies={assignedCompanies}
             />
             <main className="flex-1 overflow-y-auto bg-slate-50 p-8">
               {children}

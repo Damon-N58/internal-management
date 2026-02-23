@@ -29,6 +29,7 @@ export function AddCompanyDialog() {
   const [primaryCsm, setPrimaryCsm] = useState("")
   const [implementationLead, setImplementationLead] = useState("")
   const [contractEndDate, setContractEndDate] = useState("")
+  const [website, setWebsite] = useState("")
 
   const handleSubmit = async () => {
     if (!name.trim() || !primaryCsm.trim() || !implementationLead.trim()) return
@@ -40,6 +41,7 @@ export function AddCompanyDialog() {
         primary_csm: primaryCsm.trim(),
         implementation_lead: implementationLead.trim(),
         contract_end_date: contractEndDate || undefined,
+        website: website.trim() || undefined,
       })
       setOpen(false)
       setName("")
@@ -47,6 +49,7 @@ export function AddCompanyDialog() {
       setPrimaryCsm("")
       setImplementationLead("")
       setContractEndDate("")
+      setWebsite("")
     } catch {
       // handle error silently
     } finally {
@@ -67,14 +70,25 @@ export function AddCompanyDialog() {
           <DialogTitle>Add New Company</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="company-name">Company Name</Label>
-            <Input
-              id="company-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Acme Corp"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="company-name">Company Name</Label>
+              <Input
+                id="company-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Acme Corp"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="company-website">Website</Label>
+              <Input
+                id="company-website"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                placeholder="https://acme.com"
+              />
+            </div>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="company-status">Status</Label>
@@ -90,23 +104,25 @@ export function AddCompanyDialog() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="primary-csm">Primary CSM</Label>
-            <Input
-              id="primary-csm"
-              value={primaryCsm}
-              onChange={(e) => setPrimaryCsm(e.target.value)}
-              placeholder="Name"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="impl-lead">Implementation Lead</Label>
-            <Input
-              id="impl-lead"
-              value={implementationLead}
-              onChange={(e) => setImplementationLead(e.target.value)}
-              placeholder="Name"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="primary-csm">Primary CSM</Label>
+              <Input
+                id="primary-csm"
+                value={primaryCsm}
+                onChange={(e) => setPrimaryCsm(e.target.value)}
+                placeholder="Name"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="impl-lead">Implementation Lead</Label>
+              <Input
+                id="impl-lead"
+                value={implementationLead}
+                onChange={(e) => setImplementationLead(e.target.value)}
+                placeholder="Name"
+              />
+            </div>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="contract-end">Contract End Date</Label>

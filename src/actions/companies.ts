@@ -44,6 +44,7 @@ export async function createCompany(data: {
   primary_csm: string
   implementation_lead: string
   contract_end_date?: string
+  website?: string
 }) {
   const id = crypto.randomUUID().replace(/-/g, "").slice(0, 25)
 
@@ -54,6 +55,7 @@ export async function createCompany(data: {
     primary_csm: data.primary_csm,
     implementation_lead: data.implementation_lead,
     contract_end_date: data.contract_end_date || null,
+    website: data.website || null,
     health_score: 5,
     priority: 3,
   })
