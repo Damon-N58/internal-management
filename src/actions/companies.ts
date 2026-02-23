@@ -42,18 +42,24 @@ export async function createCompany(data: {
   name: string
   status: string
   primary_csm: string
-  implementation_lead: string
-  contract_end_date?: string
-  website?: string
+  implementation_lead?: string | null
+  second_lead?: string | null
+  third_lead?: string | null
+  contract_end_date?: string | null
+  website?: string | null
 }) {
   const id = crypto.randomUUID().replace(/-/g, "").slice(0, 25)
+
+  const clean = (v?: string | null) => (!v || v === "_none" ? null : v)
 
   const { error } = await supabase.from("company").insert({
     id,
     name: data.name,
     status: data.status,
     primary_csm: data.primary_csm,
-    implementation_lead: data.implementation_lead,
+    implementation_lead: clean(data.implementation_lead) ?? "",
+    second_lead: clean(data.second_lead),
+    third_lead: clean(data.third_lead),
     contract_end_date: data.contract_end_date || null,
     website: data.website || null,
     health_score: 5,

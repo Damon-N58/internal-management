@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Plus } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,41 +22,60 @@ import {
 } from "@/components/ui/select"
 import { createCompany } from "@/actions/companies"
 
-export function AddCompanyDialog() {
+type Profile = { id: string; full_name: string; email: string }
+
+type Props = {
+  profiles: Profile[]
+}
+
+export function AddCompanyDialog({ profiles }: Props) {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [name, setName] = useState("")
   const [status, setStatus] = useState("Active")
   const [primaryCsm, setPrimaryCsm] = useState("")
   const [implementationLead, setImplementationLead] = useState("")
+  const [secondLead, setSecondLead] = useState("")
+  const [thirdLead, setThirdLead] = useState("")
   const [contractEndDate, setContractEndDate] = useState("")
   const [website, setWebsite] = useState("")
 
   const handleSubmit = async () => {
-    if (!name.trim() || !primaryCsm.trim() || !implementationLead.trim()) return
+    if (!name.trim() || !primaryCsm) return
     setLoading(true)
     try {
       await createCompany({
         name: name.trim(),
         status,
-        primary_csm: primaryCsm.trim(),
-        implementation_lead: implementationLead.trim(),
-        contract_end_date: contractEndDate || undefined,
-        website: website.trim() || undefined,
+        primary_csm: primaryCsm,
+        implementation_lead: implementationLead || null,
+        second_lead: secondLead || null,
+        third_lead: thirdLead || null,
+        contract_end_date: contractEndDate || null,
+        website: website.trim() || null,
       })
       setOpen(false)
       setName("")
       setStatus("Active")
       setPrimaryCsm("")
       setImplementationLead("")
+      setSecondLead("")
+      setThirdLead("")
       setContractEndDate("")
       setWebsite("")
+      router.refresh()
     } catch {
-      // handle error silently
+      // handle silently
     } finally {
       setLoading(false)
     }
   }
+
+  const profileOptions = profiles.map((p) => ({
+    value: p.full_name || p.email,
+    label: p.full_name || p.email,
+  }))
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -65,14 +85,14 @@ export function AddCompanyDialog() {
           Add Company
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Add New Company</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="company-name">Company Name</Label>
+              <Label htmlFor="company-name">Company Name *</Label>
               <Input
                 id="company-name"
                 value={name}
@@ -90,10 +110,11 @@ export function AddCompanyDialog() {
               />
             </div>
           </div>
+
           <div className="space-y-1.5">
-            <Label htmlFor="company-status">Status</Label>
+            <Label>Status</Label>
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger id="company-status">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -104,28 +125,71 @@ export function AddCompanyDialog() {
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="primary-csm">Primary CSM</Label>
-              <Input
-                id="primary-csm"
-                value={primaryCsm}
-                onChange={(e) => setPrimaryCsm(e.target.value)}
-                placeholder="Name"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="impl-lead">Implementation Lead</Label>
-              <Input
-                id="impl-lead"
-                value={implementationLead}
-                onChange={(e) => setImplementationLead(e.target.value)}
-                placeholder="Name"
-              />
+
+          <div className="space-y-1.5">
+            <Label>Primary CSM *</Label>
+            <Select value={primaryCsm} onValueChange={setPrimaryCsm}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select CSM" />
+              </SelectTrigger>
+              <SelectContent>
+                {profileOptions.map((p) => (
+                  <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Implementation Engineers</Label>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Lead</p>
+                <Select value={implementationLead} onValueChange={setImplementationLead}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Lead" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">None</SelectItem>
+                    {profileOptions.map((p) => (
+                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">2nd</p>
+                <Select value={secondLead} onValueChange={setSecondLead}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="2nd" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">None</SelectItem>
+                    {profileOptions.map((p) => (
+                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">3rd</p>
+                <Select value={thirdLead} onValueChange={setThirdLead}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="3rd" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_none">None</SelectItem>
+                    {profileOptions.map((p) => (
+                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
+
           <div className="space-y-1.5">
-            <Label htmlFor="contract-end">Contract End Date</Label>
+            <Label htmlFor="contract-end">Contract End Date <span className="text-muted-foreground">(optional)</span></Label>
             <Input
               id="contract-end"
               type="date"
@@ -133,13 +197,14 @@ export function AddCompanyDialog() {
               onChange={(e) => setContractEndDate(e.target.value)}
             />
           </div>
+
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>
               Cancel
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={loading || !name.trim() || !primaryCsm.trim() || !implementationLead.trim()}
+              disabled={loading || !name.trim() || !primaryCsm}
             >
               {loading ? "Creating..." : "Create Company"}
             </Button>

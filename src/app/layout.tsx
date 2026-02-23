@@ -5,7 +5,7 @@ import { Sidebar } from "@/components/layout/sidebar"
 import { NotificationBellWrapper } from "@/components/layout/notification-bell-wrapper"
 import { TodoButtonWrapper } from "@/components/layout/todo-button-wrapper"
 import { Toaster } from "@/components/ui/sonner"
-import { getCurrentUser, getUserCompanyIds, isAdmin } from "@/lib/auth"
+import { getCurrentUser, getUserCompanyIds } from "@/lib/auth"
 import { supabase } from "@/lib/supabase"
 import { LeaderboardWrapper } from "@/components/layout/leaderboard-wrapper"
 
