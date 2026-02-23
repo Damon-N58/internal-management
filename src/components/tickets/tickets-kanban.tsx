@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { format } from "date-fns"
-import { Plus, User, MessageSquare, Calendar, GripVertical } from "lucide-react"
+import { Plus, User, MessageSquare, Calendar, GripVertical, Clock, Timer } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -58,6 +58,10 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
   const [commentLoading, setCommentLoading] = useState(false)
   const [dragTicketId, setDragTicketId] = useState<string | null>(null)
 
+  // Close dialog state
+  const [closeDialogTicket, setCloseDialogTicket] = useState<TicketWithCompany | null>(null)
+  const [actualHours, setActualHours] = useState("")
+
   // Create form state
   const [newTitle, setNewTitle] = useState("")
   const [newDescription, setNewDescription] = useState("")
@@ -65,6 +69,7 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
   const [newPriority, setNewPriority] = useState("3")
   const [newAssignee, setNewAssignee] = useState("")
   const [newDueDate, setNewDueDate] = useState("")
+  const [newEstimatedHours, setNewEstimatedHours] = useState("")
   const [creating, setCreating] = useState(false)
 
   const assigneeName = (userId: string | null) => {
@@ -82,6 +87,7 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
       priority: parseInt(newPriority),
       assigned_to: newAssignee || null,
       due_date: newDueDate || null,
+      estimated_hours: newEstimatedHours ? parseFloat(newEstimatedHours) : null,
     })
     setCreateOpen(false)
     setNewTitle("")
@@ -90,12 +96,31 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
     setNewPriority("3")
     setNewAssignee("")
     setNewDueDate("")
+    setNewEstimatedHours("")
     setCreating(false)
     router.refresh()
   }
 
-  const handleStatusChange = async (ticketId: string, companyId: string, status: string) => {
-    await updateTicketStatus(ticketId, companyId, status)
+  const promptCloseTicket = (ticket: TicketWithCompany) => {
+    setCloseDialogTicket(ticket)
+    setActualHours("")
+  }
+
+  const handleConfirmClose = async () => {
+    if (!closeDialogTicket) return
+    const hours = actualHours ? parseFloat(actualHours) : undefined
+    await updateTicketStatus(closeDialogTicket.id, closeDialogTicket.company_id, "Closed", hours)
+    setCloseDialogTicket(null)
+    setDetailTicket(null)
+    router.refresh()
+  }
+
+  const handleStatusChange = async (ticket: TicketWithCompany, status: string) => {
+    if (status === "Closed") {
+      promptCloseTicket(ticket)
+      return
+    }
+    await updateTicketStatus(ticket.id, ticket.company_id, status)
     setDetailTicket(null)
     router.refresh()
   }
@@ -108,6 +133,10 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
       return
     }
     setDragTicketId(null)
+    if (status === "Closed") {
+      promptCloseTicket(ticket)
+      return
+    }
     await updateTicketStatus(ticket.id, ticket.company_id, status)
     router.refresh()
   }
@@ -120,6 +149,11 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
     setCommentLoading(false)
     router.refresh()
   }
+
+  const companiesWithGeneral: CompanyOption[] = [
+    { id: "_general", name: "General (Internal)" },
+    ...companies.filter((c) => c.id !== "_general"),
+  ]
 
   return (
     <>
@@ -144,7 +178,7 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => handleDrop(status)}
             >
-              <div className={cn("flex items-center justify-between mb-3 px-1")}>
+              <div className="flex items-center justify-between mb-3 px-1">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-slate-700">{label}</span>
                   <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", bgColor)}>
@@ -188,6 +222,22 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
                               <span className="flex items-center gap-1 text-xs text-muted-foreground">
                                 <Calendar className="h-3 w-3" />
                                 {format(new Date(ticket.due_date), "MMM d")}
+                              </span>
+                            )}
+                            {ticket.estimated_hours != null && (
+                              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <Clock className="h-3 w-3" />
+                                {ticket.estimated_hours}h est
+                              </span>
+                            )}
+                            {ticket.actual_hours != null && (
+                              <span className={cn(
+                                "flex items-center gap-1 text-xs font-medium",
+                                ticket.estimated_hours && ticket.actual_hours > ticket.estimated_hours
+                                  ? "text-red-600" : "text-green-600"
+                              )}>
+                                <Timer className="h-3 w-3" />
+                                {ticket.actual_hours}h actual
                               </span>
                             )}
                           </div>
@@ -239,7 +289,7 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
                     <SelectValue placeholder="Select client" />
                   </SelectTrigger>
                   <SelectContent>
-                    {companies.map((c) => (
+                    {companiesWithGeneral.map((c) => (
                       <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                     ))}
                   </SelectContent>
@@ -261,7 +311,7 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-1.5">
                 <Label>Assignee</Label>
                 <Select value={newAssignee} onValueChange={setNewAssignee}>
@@ -285,6 +335,17 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
                   onChange={(e) => setNewDueDate(e.target.value)}
                 />
               </div>
+              <div className="space-y-1.5">
+                <Label>Est. Hours</Label>
+                <Input
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  value={newEstimatedHours}
+                  onChange={(e) => setNewEstimatedHours(e.target.value)}
+                  placeholder="e.g. 2"
+                />
+              </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => setCreateOpen(false)} disabled={creating}>
@@ -299,6 +360,47 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
             </div>
           </div>
         </DialogContent>
+      </Dialog>
+
+      {/* Close Ticket Dialog — prompt for actual hours */}
+      <Dialog open={!!closeDialogTicket} onOpenChange={(open) => !open && setCloseDialogTicket(null)}>
+        {closeDialogTicket && (
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Close Ticket</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <p className="text-sm text-muted-foreground">
+                How long did <span className="font-medium text-foreground">&ldquo;{closeDialogTicket.title}&rdquo;</span> actually take?
+              </p>
+              {closeDialogTicket.estimated_hours != null && (
+                <p className="text-xs text-muted-foreground">
+                  Estimated: {closeDialogTicket.estimated_hours} hours
+                </p>
+              )}
+              <div className="space-y-1.5">
+                <Label>Actual Hours</Label>
+                <Input
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  value={actualHours}
+                  onChange={(e) => setActualHours(e.target.value)}
+                  placeholder="e.g. 3.5"
+                  autoFocus
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setCloseDialogTicket(null)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleConfirmClose}>
+                  Close Ticket
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        )}
       </Dialog>
 
       {/* Ticket Detail Dialog */}
@@ -331,6 +433,27 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
                 )}
               </div>
 
+              {(detailTicket.estimated_hours != null || detailTicket.actual_hours != null) && (
+                <div className="flex items-center gap-4 text-sm">
+                  {detailTicket.estimated_hours != null && (
+                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Clock className="h-3.5 w-3.5" />
+                      Est: {detailTicket.estimated_hours}h
+                    </span>
+                  )}
+                  {detailTicket.actual_hours != null && (
+                    <span className={cn(
+                      "flex items-center gap-1.5 text-xs font-medium",
+                      detailTicket.estimated_hours && detailTicket.actual_hours > detailTicket.estimated_hours
+                        ? "text-red-600" : "text-green-600"
+                    )}>
+                      <Timer className="h-3.5 w-3.5" />
+                      Actual: {detailTicket.actual_hours}h
+                    </span>
+                  )}
+                </div>
+              )}
+
               {detailTicket.description && (
                 <p className="text-sm text-muted-foreground">{detailTicket.description}</p>
               )}
@@ -343,7 +466,7 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
                       key={status}
                       variant={detailTicket.status === status ? "default" : "outline"}
                       size="sm"
-                      onClick={() => handleStatusChange(detailTicket.id, detailTicket.company_id, status)}
+                      onClick={() => handleStatusChange(detailTicket, status)}
                       className="text-xs"
                     >
                       {label}

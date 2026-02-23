@@ -7,6 +7,7 @@ import { TodoButtonWrapper } from "@/components/layout/todo-button-wrapper"
 import { Toaster } from "@/components/ui/sonner"
 import { getCurrentUser, getUserCompanyIds, isAdmin } from "@/lib/auth"
 import { supabase } from "@/lib/supabase"
+import { LeaderboardWrapper } from "@/components/layout/leaderboard-wrapper"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,22 +34,15 @@ export default async function RootLayout({
   let assignedCompanies: { id: string; name: string; website: string | null }[] = []
 
   if (profile) {
-    if (isAdmin(profile)) {
+    const companyIds = await getUserCompanyIds(profile.id)
+    if (companyIds.length > 0) {
       const { data } = await supabase
         .from("company")
         .select("id, name, website")
+        .in("id", companyIds)
+        .neq("id", "_general")
         .order("name", { ascending: true })
       assignedCompanies = (data ?? []) as typeof assignedCompanies
-    } else {
-      const companyIds = await getUserCompanyIds(profile.id)
-      if (companyIds.length > 0) {
-        const { data } = await supabase
-          .from("company")
-          .select("id, name, website")
-          .in("id", companyIds)
-          .order("name", { ascending: true })
-        assignedCompanies = (data ?? []) as typeof assignedCompanies
-      }
     }
   }
 
@@ -63,7 +57,10 @@ export default async function RootLayout({
               todoButton={<TodoButtonWrapper />}
               assignedCompanies={assignedCompanies}
             />
-            <main className="flex-1 overflow-y-auto bg-slate-50 p-8">
+            <main className="flex-1 overflow-y-auto bg-slate-50 p-8 relative">
+              <div className="absolute top-4 right-4 z-10">
+                <LeaderboardWrapper />
+              </div>
               {children}
             </main>
           </div>

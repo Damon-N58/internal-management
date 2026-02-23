@@ -12,6 +12,7 @@ import {
   LogOut,
   Ticket,
   ChevronDown,
+  BarChart3,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase-browser"
@@ -30,6 +31,7 @@ const navItems = [
   { href: "/clients", label: "Clients", icon: Users },
   { href: "/tickets", label: "Tickets", icon: Ticket },
   { href: "/product", label: "Product Roadmap", icon: ClipboardList },
+  { href: "/analytics", label: "Analytics", icon: BarChart3, adminOnly: true },
   { href: "/settings", label: "Settings", icon: Settings },
 ]
 
@@ -65,7 +67,7 @@ export function Sidebar({ profile, notificationBell, todoButton, assignedCompani
         </div>
       </div>
       <nav className="flex flex-col gap-1 flex-1 overflow-y-auto">
-        {navItems.map(({ href, label, icon: Icon }) => {
+        {navItems.filter((item) => !("adminOnly" in item && item.adminOnly) || profile.role === "Admin").map(({ href, label, icon: Icon }) => {
           const isActive =
             href === "/" ? pathname === "/" : pathname.startsWith(href)
           const isClients = href === "/clients"

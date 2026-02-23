@@ -183,6 +183,9 @@ export type Database = {
           priority: number
           assigned_to: string | null
           due_date: string | null
+          estimated_hours: number | null
+          actual_hours: number | null
+          closed_at: string | null
           company_id: string
           created_at: string
         }
@@ -194,6 +197,9 @@ export type Database = {
           priority?: number
           assigned_to?: string | null
           due_date?: string | null
+          estimated_hours?: number | null
+          actual_hours?: number | null
+          closed_at?: string | null
           company_id: string
         }
         Update: Partial<Database["public"]["Tables"]["ticket"]["Insert"]>

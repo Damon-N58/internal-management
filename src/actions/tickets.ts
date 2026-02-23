@@ -11,6 +11,7 @@ type CreateTicketData = {
   priority?: number
   assigned_to?: string | null
   due_date?: string | null
+  estimated_hours?: number | null
 }
 
 export async function createTicket(companyId: string, data: CreateTicketData) {
@@ -22,33 +23,48 @@ export async function createTicket(companyId: string, data: CreateTicketData) {
       priority: data.priority ?? 3,
       assigned_to: data.assigned_to || null,
       due_date: data.due_date || null,
+      estimated_hours: data.estimated_hours || null,
       status: "Open",
       company_id: companyId,
     })
     .select()
     .single()
 
-  await writeActivityLog(companyId, `Ticket created: "${data.title}"`, "Automated")
+  if (companyId !== "_general") {
+    await writeActivityLog(companyId, `Ticket created: "${data.title}"`, "Automated")
+  }
   revalidatePath(`/clients/${companyId}`)
   revalidatePath("/tickets")
+  revalidatePath("/analytics")
   return ticket
 }
 
-export async function updateTicketStatus(ticketId: string, companyId: string, status: string) {
+export async function updateTicketStatus(ticketId: string, companyId: string, status: string, actualHours?: number) {
+  const updateData: Record<string, unknown> = { status }
+  if (status === "Closed") {
+    updateData.closed_at = new Date().toISOString()
+    if (actualHours !== undefined) {
+      updateData.actual_hours = actualHours
+    }
+  }
+
   const { data: ticket } = await supabase
     .from("ticket")
-    .update({ status })
+    .update(updateData)
     .eq("id", ticketId)
     .select()
     .single()
 
-  await writeActivityLog(
-    companyId,
-    `Ticket "${ticket?.title}" status changed to ${status}`,
-    "Automated"
-  )
+  if (companyId !== "_general") {
+    await writeActivityLog(
+      companyId,
+      `Ticket "${ticket?.title}" status changed to ${status}`,
+      "Automated"
+    )
+  }
   revalidatePath(`/clients/${companyId}`)
   revalidatePath("/tickets")
+  revalidatePath("/analytics")
   return ticket
 }
 
