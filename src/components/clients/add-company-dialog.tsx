@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { createCompany } from "@/actions/companies"
+import { toast } from "sonner"
 
 type Profile = { id: string; full_name: string; email: string }
 
@@ -65,8 +66,8 @@ export function AddCompanyDialog({ profiles }: Props) {
       setContractEndDate("")
       setWebsite("")
       router.refresh()
-    } catch {
-      // handle silently
+    } catch (e) {
+      toast.error("Failed to create company", { description: e instanceof Error ? e.message : "Unknown error" })
     } finally {
       setLoading(false)
     }

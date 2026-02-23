@@ -23,6 +23,7 @@ import {
 import { cn } from "@/lib/utils"
 import { createTicket, updateTicketStatus, addTicketComment } from "@/actions/tickets"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import type { Ticket, TicketStatus } from "@/types"
 
 type TicketWithCompany = Ticket & { company_name: string }
@@ -81,24 +82,29 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
   const handleCreate = async () => {
     if (!newTitle.trim() || !newCompany) return
     setCreating(true)
-    await createTicket(newCompany, {
-      title: newTitle.trim(),
-      description: newDescription.trim() || undefined,
-      priority: parseInt(newPriority),
-      assigned_to: newAssignee || null,
-      due_date: newDueDate || null,
-      estimated_hours: newEstimatedHours ? parseFloat(newEstimatedHours) : null,
-    })
-    setCreateOpen(false)
-    setNewTitle("")
-    setNewDescription("")
-    setNewCompany("")
-    setNewPriority("3")
-    setNewAssignee("")
-    setNewDueDate("")
-    setNewEstimatedHours("")
-    setCreating(false)
-    router.refresh()
+    try {
+      await createTicket(newCompany, {
+        title: newTitle.trim(),
+        description: newDescription.trim() || undefined,
+        priority: parseInt(newPriority),
+        assigned_to: newAssignee || null,
+        due_date: newDueDate || null,
+        estimated_hours: newEstimatedHours ? parseFloat(newEstimatedHours) : null,
+      })
+      setCreateOpen(false)
+      setNewTitle("")
+      setNewDescription("")
+      setNewCompany("")
+      setNewPriority("3")
+      setNewAssignee("")
+      setNewDueDate("")
+      setNewEstimatedHours("")
+      router.refresh()
+    } catch (e) {
+      toast.error("Failed to create ticket", { description: e instanceof Error ? e.message : "Unknown error" })
+    } finally {
+      setCreating(false)
+    }
   }
 
   const promptCloseTicket = (ticket: TicketWithCompany) => {

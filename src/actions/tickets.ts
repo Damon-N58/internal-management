@@ -15,7 +15,7 @@ type CreateTicketData = {
 }
 
 export async function createTicket(companyId: string, data: CreateTicketData) {
-  const { data: ticket } = await supabase
+  const { data: ticket, error } = await supabase
     .from("ticket")
     .insert({
       title: data.title,
@@ -26,9 +26,12 @@ export async function createTicket(companyId: string, data: CreateTicketData) {
       estimated_hours: data.estimated_hours || null,
       status: "Open",
       company_id: companyId,
+      created_at: new Date().toISOString(),
     })
     .select()
     .single()
+
+  if (error) throw new Error(error.message)
 
   if (companyId !== "_general") {
     await writeActivityLog(companyId, `Ticket created: "${data.title}"`, "Automated")

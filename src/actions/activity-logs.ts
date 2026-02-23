@@ -13,6 +13,7 @@ export async function writeActivityLog(
     content,
     type,
     company_id: companyId,
+    created_at: new Date().toISOString(),
   })
   await supabase
     .from("company")

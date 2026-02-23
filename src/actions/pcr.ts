@@ -15,7 +15,7 @@ type CreatePCRData = {
 }
 
 export async function createPCR(data: CreatePCRData) {
-  const { data: pcr } = await supabase
+  const { data: pcr, error } = await supabase
     .from("product_change_request")
     .insert({
       issue: data.issue,
@@ -26,9 +26,12 @@ export async function createPCR(data: CreatePCRData) {
       assigned_to: data.assignedTo ?? null,
       deadline: data.deadline?.toISOString() ?? null,
       status: "Requested",
+      created_at: new Date().toISOString(),
     })
     .select()
     .single()
+
+  if (error) throw new Error(error.message)
 
   revalidatePath("/product")
   return pcr

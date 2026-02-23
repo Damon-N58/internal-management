@@ -45,6 +45,8 @@ export type Database = {
           conversation_volume?: number | null
           google_drive_url?: string | null
           website?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Update: Partial<Database["public"]["Tables"]["company"]["Insert"]>
         Relationships: [
@@ -145,6 +147,7 @@ export type Database = {
           status: string
           deadline?: string | null
           completed_at?: string | null
+          created_at?: string
         }
         Update: Partial<Database["public"]["Tables"]["product_change_request"]["Insert"]>
         Relationships: []
@@ -162,6 +165,7 @@ export type Database = {
           content: string
           type: string
           company_id: string
+          created_at?: string
         }
         Update: Partial<Database["public"]["Tables"]["activity_log"]["Insert"]>
         Relationships: [
@@ -201,6 +205,7 @@ export type Database = {
           actual_hours?: number | null
           closed_at?: string | null
           company_id: string
+          created_at?: string
         }
         Update: Partial<Database["public"]["Tables"]["ticket"]["Insert"]>
         Relationships: [

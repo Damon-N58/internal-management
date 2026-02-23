@@ -20,6 +20,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { useRouter } from "next/navigation"
 import { createPCR } from "@/actions/pcr"
+import { toast } from "sonner"
 import type { PCRIssueType, PCRLocation } from "@/types"
 
 type Props = {
@@ -44,14 +45,19 @@ export function PCRModal({ open, onClose }: Props) {
   const handleSubmit = async () => {
     if (!form.description.trim() || !form.requestedBy.trim()) return
     setLoading(true)
-    await createPCR({
-      ...form,
-      assignedTo: form.assignedTo.trim() || undefined,
-    })
-    setForm(defaultForm)
-    setLoading(false)
-    onClose()
-    router.refresh()
+    try {
+      await createPCR({
+        ...form,
+        assignedTo: form.assignedTo.trim() || undefined,
+      })
+      setForm(defaultForm)
+      onClose()
+      router.refresh()
+    } catch (e) {
+      toast.error("Failed to submit request", { description: e instanceof Error ? e.message : "Unknown error" })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

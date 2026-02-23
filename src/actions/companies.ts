@@ -52,6 +52,8 @@ export async function createCompany(data: {
 
   const clean = (v?: string | null) => (!v || v === "_none" ? null : v)
 
+  const now = new Date().toISOString()
+
   const { error } = await supabase.from("company").insert({
     id,
     name: data.name,
@@ -64,6 +66,8 @@ export async function createCompany(data: {
     website: data.website || null,
     health_score: 5,
     priority: 3,
+    created_at: now,
+    updated_at: now,
   })
 
   if (error) throw new Error(error.message)
