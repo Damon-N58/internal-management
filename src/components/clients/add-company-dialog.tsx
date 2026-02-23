@@ -45,32 +45,31 @@ export function AddCompanyDialog({ profiles }: Props) {
   const handleSubmit = async () => {
     if (!name.trim() || !primaryCsm) return
     setLoading(true)
-    try {
-      await createCompany({
-        name: name.trim(),
-        status,
-        primary_csm: primaryCsm,
-        implementation_lead: implementationLead || null,
-        second_lead: secondLead || null,
-        third_lead: thirdLead || null,
-        contract_end_date: contractEndDate || null,
-        website: website.trim() || null,
-      })
-      setOpen(false)
-      setName("")
-      setStatus("Active")
-      setPrimaryCsm("")
-      setImplementationLead("")
-      setSecondLead("")
-      setThirdLead("")
-      setContractEndDate("")
-      setWebsite("")
-      router.refresh()
-    } catch (e) {
-      toast.error("Failed to create company", { description: e instanceof Error ? e.message : "Unknown error" })
-    } finally {
-      setLoading(false)
+    const result = await createCompany({
+      name: name.trim(),
+      status,
+      primary_csm: primaryCsm,
+      implementation_lead: implementationLead || null,
+      second_lead: secondLead || null,
+      third_lead: thirdLead || null,
+      contract_end_date: contractEndDate || null,
+      website: website.trim() || null,
+    })
+    setLoading(false)
+    if (result.error) {
+      toast.error("Failed to create company", { description: result.error })
+      return
     }
+    setOpen(false)
+    setName("")
+    setStatus("Active")
+    setPrimaryCsm("")
+    setImplementationLead("")
+    setSecondLead("")
+    setThirdLead("")
+    setContractEndDate("")
+    setWebsite("")
+    router.refresh()
   }
 
   const profileOptions = profiles.map((p) => ({

@@ -6,6 +6,10 @@ import { writeActivityLog } from "@/actions/activity-logs"
 import { applyHealthScore } from "@/lib/apply-health-score"
 import type { CompanyStatus } from "@/types"
 
+function genId() {
+  return crypto.randomUUID().replace(/-/g, "").slice(0, 25)
+}
+
 export async function updateCompanyStatus(companyId: string, status: CompanyStatus) {
   const { data: current } = await supabase
     .from("company")
@@ -47,11 +51,9 @@ export async function createCompany(data: {
   third_lead?: string | null
   contract_end_date?: string | null
   website?: string | null
-}) {
-  const id = crypto.randomUUID().replace(/-/g, "").slice(0, 25)
-
+}): Promise<{ id?: string; error?: string }> {
+  const id = genId()
   const clean = (v?: string | null) => (!v || v === "_none" ? null : v)
-
   const now = new Date().toISOString()
 
   const { error } = await supabase.from("company").insert({
@@ -70,12 +72,12 @@ export async function createCompany(data: {
     updated_at: now,
   })
 
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
   await writeActivityLog(id, `Company "${data.name}" created`, "Automated")
   revalidatePath("/")
   revalidatePath("/clients")
-  return id
+  return { id }
 }
 
 export async function recalculateCompanyHealth(companyId: string) {

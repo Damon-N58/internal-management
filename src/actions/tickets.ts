@@ -5,6 +5,10 @@ import { revalidatePath } from "next/cache"
 import { writeActivityLog } from "@/actions/activity-logs"
 import { requireAuth } from "@/lib/auth"
 
+function genId() {
+  return crypto.randomUUID().replace(/-/g, "").slice(0, 25)
+}
+
 type CreateTicketData = {
   title: string
   description?: string
@@ -14,10 +18,14 @@ type CreateTicketData = {
   estimated_hours?: number | null
 }
 
-export async function createTicket(companyId: string, data: CreateTicketData) {
-  const { data: ticket, error } = await supabase
+export async function createTicket(
+  companyId: string,
+  data: CreateTicketData
+): Promise<{ error?: string }> {
+  const { error } = await supabase
     .from("ticket")
     .insert({
+      id: genId(),
       title: data.title,
       description: data.description || null,
       priority: data.priority ?? 3,
@@ -28,10 +36,8 @@ export async function createTicket(companyId: string, data: CreateTicketData) {
       company_id: companyId,
       created_at: new Date().toISOString(),
     })
-    .select()
-    .single()
 
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
   if (companyId !== "_general") {
     await writeActivityLog(companyId, `Ticket created: "${data.title}"`, "Automated")
@@ -39,7 +45,7 @@ export async function createTicket(companyId: string, data: CreateTicketData) {
   revalidatePath(`/clients/${companyId}`)
   revalidatePath("/tickets")
   revalidatePath("/analytics")
-  return ticket
+  return {}
 }
 
 export async function updateTicketStatus(ticketId: string, companyId: string, status: string, actualHours?: number) {

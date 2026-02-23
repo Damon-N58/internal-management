@@ -4,6 +4,10 @@ import { supabase } from "@/lib/supabase"
 import { revalidatePath } from "next/cache"
 import type { PCRIssueType, PCRLocation } from "@/types"
 
+function genId() {
+  return crypto.randomUUID().replace(/-/g, "").slice(0, 25)
+}
+
 type CreatePCRData = {
   issue: PCRIssueType
   description: string
@@ -14,10 +18,11 @@ type CreatePCRData = {
   deadline?: Date
 }
 
-export async function createPCR(data: CreatePCRData) {
-  const { data: pcr, error } = await supabase
+export async function createPCR(data: CreatePCRData): Promise<{ error?: string }> {
+  const { error } = await supabase
     .from("product_change_request")
     .insert({
+      id: genId(),
       issue: data.issue,
       description: data.description,
       location: data.location,
@@ -28,13 +33,11 @@ export async function createPCR(data: CreatePCRData) {
       status: "Requested",
       created_at: new Date().toISOString(),
     })
-    .select()
-    .single()
 
-  if (error) throw new Error(error.message)
+  if (error) return { error: error.message }
 
   revalidatePath("/product")
-  return pcr
+  return {}
 }
 
 export async function updatePCRStatus(pcrId: string, status: string) {

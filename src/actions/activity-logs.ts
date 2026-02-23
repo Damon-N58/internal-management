@@ -4,12 +4,17 @@ import { supabase } from "@/lib/supabase"
 import { revalidatePath } from "next/cache"
 import type { ActivityLogType } from "@/types"
 
+function genId() {
+  return crypto.randomUUID().replace(/-/g, "").slice(0, 25)
+}
+
 export async function writeActivityLog(
   companyId: string,
   content: string,
   type: ActivityLogType
 ) {
   await supabase.from("activity_log").insert({
+    id: genId(),
     content,
     type,
     company_id: companyId,

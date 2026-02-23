@@ -45,19 +45,18 @@ export function PCRModal({ open, onClose }: Props) {
   const handleSubmit = async () => {
     if (!form.description.trim() || !form.requestedBy.trim()) return
     setLoading(true)
-    try {
-      await createPCR({
-        ...form,
-        assignedTo: form.assignedTo.trim() || undefined,
-      })
-      setForm(defaultForm)
-      onClose()
-      router.refresh()
-    } catch (e) {
-      toast.error("Failed to submit request", { description: e instanceof Error ? e.message : "Unknown error" })
-    } finally {
-      setLoading(false)
+    const result = await createPCR({
+      ...form,
+      assignedTo: form.assignedTo.trim() || undefined,
+    })
+    setLoading(false)
+    if (result.error) {
+      toast.error("Failed to submit request", { description: result.error })
+      return
     }
+    setForm(defaultForm)
+    onClose()
+    router.refresh()
   }
 
   return (
