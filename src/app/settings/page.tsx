@@ -10,16 +10,16 @@ export default async function SettingsPage() {
   const managerOrAbove = isManagerOrAbove(profile)
 
   let assignments: Awaited<ReturnType<typeof getAssignments>> = []
-  let companies: { id: string; name: string }[] = []
+  let companies: { id: string; name: string; primary_csm: string; implementation_lead: string; second_lead: string | null; third_lead: string | null }[] = []
 
   if (admin) {
     const [profiles, assignmentsData, { data: companyData }] = await Promise.all([
       getAllProfiles(),
       getAssignments(),
-      supabase.from("company").select("id, name").order("name", { ascending: true }),
+      supabase.from("company").select("id, name, primary_csm, implementation_lead, second_lead, third_lead").order("name", { ascending: true }),
     ])
     assignments = assignmentsData
-    companies = (companyData ?? []) as { id: string; name: string }[]
+    companies = (companyData ?? []) as typeof companies
 
     return (
       <div className="space-y-6">

@@ -18,7 +18,8 @@ import {
 import { PCRModal } from "./pcr-modal"
 import type { ProductChangeRequest, PCRStatus } from "@/types"
 
-type Props = { pcrs: ProductChangeRequest[] }
+type ProfileOption = { id: string; full_name: string; email: string }
+type Props = { pcrs: ProductChangeRequest[]; profiles: ProfileOption[] }
 
 const statusFilters: ("All" | PCRStatus)[] = ["All", "Requested", "In Progress", "Completed"]
 
@@ -30,7 +31,7 @@ const priorityLabel: Record<number, string> = {
   5: "⚪ Minimal",
 }
 
-export function ProductTable({ pcrs }: Props) {
+export function ProductTable({ pcrs, profiles }: Props) {
   const [filter, setFilter] = useState<"All" | PCRStatus>("All")
   const [modalOpen, setModalOpen] = useState(false)
 
@@ -117,7 +118,7 @@ export function ProductTable({ pcrs }: Props) {
         </Table>
       </CardContent>
 
-      <PCRModal open={modalOpen} onClose={() => setModalOpen(false)} />
+      <PCRModal open={modalOpen} onClose={() => setModalOpen(false)} profiles={profiles} />
     </Card>
   )
 }

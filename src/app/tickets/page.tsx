@@ -19,8 +19,14 @@ export default async function TicketsPage() {
     .order("name", { ascending: true })
 
   if (companyIds) {
-    ticketQuery = ticketQuery.in("company_id", companyIds)
-    companyQuery = companyQuery.in("id", companyIds)
+    if (companyIds.length > 0) {
+      ticketQuery = ticketQuery.or(
+        `company_id.in.(${companyIds.join(",")}),assigned_to.eq.${profile.id}`
+      )
+      companyQuery = companyQuery.in("id", companyIds)
+    } else {
+      ticketQuery = ticketQuery.eq("assigned_to", profile.id)
+    }
   }
 
   const [{ data: tickets }, { data: profiles }, { data: companies }] = await Promise.all([

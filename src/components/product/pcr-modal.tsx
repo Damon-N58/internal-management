@@ -23,9 +23,12 @@ import { createPCR } from "@/actions/pcr"
 import { toast } from "sonner"
 import type { PCRIssueType, PCRLocation } from "@/types"
 
+type ProfileOption = { id: string; full_name: string; email: string }
+
 type Props = {
   open: boolean
   onClose: () => void
+  profiles: ProfileOption[]
 }
 
 const defaultForm = {
@@ -37,17 +40,17 @@ const defaultForm = {
   assignedTo: "",
 }
 
-export function PCRModal({ open, onClose }: Props) {
+export function PCRModal({ open, onClose, profiles }: Props) {
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState(defaultForm)
   const router = useRouter()
 
   const handleSubmit = async () => {
-    if (!form.description.trim() || !form.requestedBy.trim()) return
+    if (!form.description.trim() || !form.requestedBy) return
     setLoading(true)
     const result = await createPCR({
       ...form,
-      assignedTo: form.assignedTo.trim() || undefined,
+      assignedTo: form.assignedTo && form.assignedTo !== "_none" ? form.assignedTo : undefined,
     })
     setLoading(false)
     if (result.error) {
@@ -124,21 +127,42 @@ export function PCRModal({ open, onClose }: Props) {
             </div>
             <div className="space-y-1.5">
               <Label>Requested By</Label>
-              <Input
+              <Select
                 value={form.requestedBy}
-                onChange={(e) => setForm({ ...form, requestedBy: e.target.value })}
-                placeholder="Name or team"
-              />
+                onValueChange={(v) => setForm({ ...form, requestedBy: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select person" />
+                </SelectTrigger>
+                <SelectContent>
+                  {profiles.map((p) => (
+                    <SelectItem key={p.id} value={p.full_name || p.email}>
+                      {p.full_name || p.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
           <div className="space-y-1.5">
             <Label>Assigned To (optional)</Label>
-            <Input
+            <Select
               value={form.assignedTo}
-              onChange={(e) => setForm({ ...form, assignedTo: e.target.value })}
-              placeholder="Internal assignee"
-            />
+              onValueChange={(v) => setForm({ ...form, assignedTo: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Unassigned" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">None</SelectItem>
+                {profiles.map((p) => (
+                  <SelectItem key={p.id} value={p.full_name || p.email}>
+                    {p.full_name || p.email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex justify-end gap-2">
@@ -147,7 +171,7 @@ export function PCRModal({ open, onClose }: Props) {
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={loading || !form.description.trim() || !form.requestedBy.trim()}
+              disabled={loading || !form.description.trim() || !form.requestedBy}
             >
               {loading ? "Submitting..." : "Submit"}
             </Button>

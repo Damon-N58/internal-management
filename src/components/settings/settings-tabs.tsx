@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProfileTab } from "./profile-tab"
 import { TeamTab } from "./team-tab"
 import { AssignmentsTab } from "./assignments-tab"
-import type { Profile, Company } from "@/types"
+import type { Profile } from "@/types"
 
 type Assignment = {
   id: string
@@ -14,11 +14,20 @@ type Assignment = {
   company: { id: string; name: string }
 }
 
+type CompanyWithStaff = {
+  id: string
+  name: string
+  primary_csm: string
+  implementation_lead: string
+  second_lead: string | null
+  third_lead: string | null
+}
+
 type Props = {
   profile: Profile
   profiles: Profile[]
   assignments: Assignment[]
-  companies: { id: string; name: string }[]
+  companies: CompanyWithStaff[]
   isAdmin: boolean
   isManagerOrAbove: boolean
 }
@@ -40,7 +49,7 @@ export function SettingsTabs({
       </TabsList>
 
       <TabsContent value="profile" className="mt-6">
-        <ProfileTab profile={profile} />
+        <ProfileTab />
       </TabsContent>
 
       {isManagerOrAbove && (
@@ -58,7 +67,7 @@ export function SettingsTabs({
           <AssignmentsTab
             assignments={assignments as Assignment[]}
             profiles={profiles}
-            companies={companies as Company[]}
+            companies={companies}
           />
         </TabsContent>
       )}

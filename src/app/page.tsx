@@ -22,6 +22,7 @@ export default async function DashboardPage() {
 
   let companies: CompanyWithRelations[] = []
   let upcomingDeadlines: Deadline[] = []
+  let directTickets: Ticket[] = []
 
   try {
     let companyQuery = supabase
@@ -35,9 +36,12 @@ export default async function DashboardPage() {
       .select()
       .lte("due_date", sevenDaysOut)
 
-    if (companyIds) {
+    if (companyIds && companyIds.length > 0) {
       companyQuery = companyQuery.in("id", companyIds)
       deadlineQuery = deadlineQuery.in("company_id", companyIds)
+    } else if (companyIds) {
+      companyQuery = companyQuery.in("id", ["_none"])
+      deadlineQuery = deadlineQuery.in("company_id", ["_none"])
     }
 
     const [{ data: companyData }, { data: deadlineData }] = await Promise.all([
@@ -47,6 +51,15 @@ export default async function DashboardPage() {
 
     companies = (companyData ?? []) as unknown as CompanyWithRelations[]
     upcomingDeadlines = deadlineData ?? []
+
+    if (companyIds) {
+      const { data: myTickets } = await supabase
+        .from("ticket")
+        .select()
+        .eq("assigned_to", profile.id)
+        .neq("status", "Closed")
+      directTickets = myTickets ?? []
+    }
   } catch {
     // DB unavailable — render empty state
   }
@@ -57,6 +70,14 @@ export default async function DashboardPage() {
     (sum, c) => sum + (c.blocker ?? []).filter((b) => b.status === "Open").length,
     0
   )
+  const companyOpenTickets = companies.reduce(
+    (sum, c) => sum + (c.ticket ?? []).filter((t) => t.status !== "Closed").length,
+    0
+  )
+  const myDirectTickets = companyIds
+    ? directTickets.filter((t) => !companyIds.includes(t.company_id)).length
+    : 0
+  const totalOpenTickets = companyOpenTickets + myDirectTickets
 
   return (
     <div className="space-y-8">
@@ -65,7 +86,7 @@ export default async function DashboardPage() {
         <p className="text-muted-foreground">What needs your attention today</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -94,6 +115,18 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{upcomingDeadlines.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Open Tickets
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className={`text-3xl font-bold ${totalOpenTickets > 0 ? "text-blue-600" : ""}`}>
+              {totalOpenTickets}
+            </div>
           </CardContent>
         </Card>
         <Card>

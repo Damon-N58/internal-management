@@ -17,13 +17,15 @@ export async function generateNotifications() {
 
   if (!companies || !blockers) return
 
-  const { data: existingUnread } = await supabase
+  const sevenDaysAgo = addDays(new Date(), -7).toISOString()
+
+  const { data: existingRecent } = await supabase
     .from("notification")
     .select("type, company_id")
-    .eq("is_read", false)
+    .gte("created_at", sevenDaysAgo)
 
   const existingKeys = new Set(
-    (existingUnread ?? []).map((n) => `${n.type}:${n.company_id ?? "global"}`)
+    (existingRecent ?? []).map((n) => `${n.type}:${n.company_id ?? "global"}`)
   )
 
   const toCreate: {

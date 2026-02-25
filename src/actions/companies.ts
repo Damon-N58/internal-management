@@ -80,6 +80,21 @@ export async function createCompany(data: {
   return { id }
 }
 
+export async function updateCompanyStaff(
+  companyId: string,
+  field: "primary_csm" | "implementation_lead" | "second_lead" | "third_lead",
+  value: string | null
+) {
+  await supabase
+    .from("company")
+    .update({ [field]: value ?? null })
+    .eq("id", companyId)
+
+  revalidatePath("/settings")
+  revalidatePath("/clients")
+  revalidatePath(`/clients/${companyId}`)
+}
+
 export async function recalculateCompanyHealth(companyId: string) {
   const result = await applyHealthScore(companyId)
   revalidatePath("/")

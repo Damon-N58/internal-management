@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { format } from "date-fns"
 import { Plus, User, MessageSquare, Calendar, GripVertical, Clock, Timer } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -58,6 +58,28 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
   const [comment, setComment] = useState("")
   const [commentLoading, setCommentLoading] = useState(false)
   const [dragTicketId, setDragTicketId] = useState<string | null>(null)
+
+  // Comments state
+  const [comments, setComments] = useState<{
+    id: string
+    content: string
+    created_at: string
+    profile: { full_name: string; email: string } | null
+  }[]>([])
+  const [commentsLoading, setCommentsLoading] = useState(false)
+
+  useEffect(() => {
+    if (!detailTicket) {
+      setComments([])
+      return
+    }
+    setCommentsLoading(true)
+    fetch(`/api/tickets/${detailTicket.id}/comments`)
+      .then((r) => r.json())
+      .then((data) => setComments(data))
+      .catch(() => setComments([]))
+      .finally(() => setCommentsLoading(false))
+  }, [detailTicket?.id])
 
   // Close dialog state
   const [closeDialogTicket, setCloseDialogTicket] = useState<TicketWithCompany | null>(null)
@@ -152,6 +174,10 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
     await addTicketComment(ticketId, companyId, comment)
     setComment("")
     setCommentLoading(false)
+    fetch(`/api/tickets/${ticketId}/comments`)
+      .then((r) => r.json())
+      .then((data) => setComments(data))
+      .catch(() => {})
     router.refresh()
   }
 
@@ -480,11 +506,32 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
                 </div>
               </div>
 
-              <div className="border-t pt-3 space-y-2">
+              <div className="border-t pt-3 space-y-3">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <MessageSquare className="h-3.5 w-3.5" />
-                  <span className="font-medium">Comments</span>
+                  <span className="font-medium">Comments ({comments.length})</span>
                 </div>
+                {commentsLoading ? (
+                  <p className="text-xs text-muted-foreground">Loading comments...</p>
+                ) : comments.length > 0 ? (
+                  <div className="max-h-48 overflow-y-auto space-y-2">
+                    {comments.map((c) => (
+                      <div key={c.id} className="rounded-md bg-slate-50 px-3 py-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium">
+                            {c.profile?.full_name || c.profile?.email || "Unknown"}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {format(new Date(c.created_at), "MMM d 'at' h:mm a")}
+                          </span>
+                        </div>
+                        <p className="text-sm mt-1">{c.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">No comments yet</p>
+                )}
                 <div className="flex gap-2">
                   <Input
                     value={comment}
