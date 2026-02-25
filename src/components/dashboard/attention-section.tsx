@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { addDays, differenceInDays, isBefore } from "date-fns"
 import { AlertTriangle } from "lucide-react"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { HealthBadge } from "@/components/health-badge"
 import { StatusBadge } from "@/components/status-badge"
 import type { Company, Blocker, Deadline } from "@/types"
@@ -68,21 +69,25 @@ export function AttentionSection({ companies }: Props) {
 
   if (companiesNeedingAttention.length === 0) {
     return (
-      <div className="rounded-lg border border-green-200 bg-green-50 px-5 py-4 text-sm text-green-700">
-        ✓ All clients are on track — no attention required right now.
-      </div>
+      <Card className="border-green-200 bg-green-50">
+        <CardContent className="py-4 text-sm text-green-700">
+          All clients are on track — no attention required right now.
+        </CardContent>
+      </Card>
     )
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <AlertTriangle className="h-4 w-4 text-amber-600" />
-        <h3 className="font-semibold text-sm">
-          Attention Required ({companiesNeedingAttention.length})
-        </h3>
-      </div>
-      <div className="grid gap-2">
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <h3 className="font-semibold text-sm">
+            Attention Required ({companiesNeedingAttention.length})
+          </h3>
+        </div>
+      </CardHeader>
+      <CardContent className="grid gap-2">
         {companiesNeedingAttention.map(({ company, reasons }) => {
           const hasCritical = reasons.some((r) => r.severity === "critical")
           return (
@@ -122,7 +127,7 @@ export function AttentionSection({ companies }: Props) {
             </Link>
           )
         })}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

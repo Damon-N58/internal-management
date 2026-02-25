@@ -1,10 +1,9 @@
-import { createClient } from "@/lib/supabase-server"
+import { currentUser } from "@clerk/nextjs/server"
 import { supabase } from "@/lib/supabase"
 import type { Profile, UserRole } from "@/types"
 
 export async function getCurrentUser(): Promise<Profile | null> {
-  const client = await createClient()
-  const { data: { user } } = await client.auth.getUser()
+  const user = await currentUser()
   if (!user) return null
 
   const { data: profile } = await supabase
@@ -13,7 +12,27 @@ export async function getCurrentUser(): Promise<Profile | null> {
     .eq("id", user.id)
     .single()
 
-  return profile ?? null
+  if (profile) return profile
+
+  // Auto-create profile on first access
+  const fullName =
+    [user.firstName, user.lastName].filter(Boolean).join(" ") ||
+    user.emailAddresses[0]?.emailAddress ||
+    ""
+
+  const { data: newProfile } = await supabase
+    .from("profile")
+    .insert({
+      id: user.id,
+      email: user.emailAddresses[0]?.emailAddress ?? "",
+      full_name: fullName,
+      role: "Member",
+      created_at: new Date().toISOString(),
+    })
+    .select()
+    .single()
+
+  return newProfile ?? null
 }
 
 export async function requireAuth(): Promise<Profile> {

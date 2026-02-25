@@ -5,6 +5,7 @@ import { format } from "date-fns"
 import { Plus } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { StatusBadge } from "@/components/status-badge"
 import {
   Table,
@@ -36,8 +37,8 @@ export function ProductTable({ pcrs }: Props) {
   const filtered = filter === "All" ? pcrs : pcrs.filter((p) => p.status === filter)
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <Card>
+      <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
         <Tabs
           value={filter}
           onValueChange={(v) => setFilter(v as "All" | PCRStatus)}
@@ -59,9 +60,8 @@ export function ProductTable({ pcrs }: Props) {
           <Plus className="mr-2 h-4 w-4" />
           Request Feature / Issue
         </Button>
-      </div>
-
-      <div className="rounded-lg border bg-white">
+      </CardHeader>
+      <CardContent className="px-0 pb-0">
         <Table>
           <TableHeader>
             <TableRow>
@@ -115,9 +115,9 @@ export function ProductTable({ pcrs }: Props) {
             )}
           </TableBody>
         </Table>
-      </div>
+      </CardContent>
 
       <PCRModal open={modalOpen} onClose={() => setModalOpen(false)} />
-    </div>
+    </Card>
   )
 }

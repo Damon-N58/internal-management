@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
+import { ClerkProvider } from "@clerk/nextjs"
 import { Sidebar } from "@/components/layout/sidebar"
 import { NotificationBellWrapper } from "@/components/layout/notification-bell-wrapper"
 import { TodoButtonWrapper } from "@/components/layout/todo-button-wrapper"
@@ -47,28 +48,30 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {profile ? (
-          <div className="flex h-screen overflow-hidden">
-            <Sidebar
-              profile={profile}
-              notificationBell={<NotificationBellWrapper />}
-              todoButton={<TodoButtonWrapper />}
-              assignedCompanies={assignedCompanies}
-            />
-            <main className="flex-1 overflow-y-auto bg-slate-50 p-8 relative">
-              <div className="absolute top-4 right-4 z-10">
-                <LeaderboardWrapper />
-              </div>
-              {children}
-            </main>
-          </div>
-        ) : (
-          <>{children}</>
-        )}
-        <Toaster />
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+          {profile ? (
+            <div className="flex h-screen overflow-hidden">
+              <Sidebar
+                profile={profile}
+                notificationBell={<NotificationBellWrapper />}
+                todoButton={<TodoButtonWrapper />}
+                assignedCompanies={assignedCompanies}
+              />
+              <main className="flex-1 overflow-y-auto bg-slate-50 p-8 relative">
+                <div className="absolute top-4 right-4 z-10">
+                  <LeaderboardWrapper />
+                </div>
+                {children}
+              </main>
+            </div>
+          ) : (
+            <>{children}</>
+          )}
+          <Toaster />
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }

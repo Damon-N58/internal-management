@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import {
   LayoutDashboard,
   Users,
@@ -15,7 +15,8 @@ import {
   BarChart3,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { createClient } from "@/lib/supabase-browser"
+import { useClerk } from "@clerk/nextjs"
+import { Separator } from "@/components/ui/separator"
 import { getFaviconUrl } from "@/lib/favicon"
 import type { ReactNode } from "react"
 import type { Profile } from "@/types"
@@ -44,14 +45,11 @@ type Props = {
 
 export function Sidebar({ profile, notificationBell, todoButton, assignedCompanies = [] }: Props) {
   const pathname = usePathname()
-  const router = useRouter()
-  const supabase = createClient()
+  const { signOut } = useClerk()
   const [clientsExpanded, setClientsExpanded] = useState(false)
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push("/login")
-    router.refresh()
+  const handleLogout = () => {
+    signOut({ redirectUrl: "/login" })
   }
 
   return (
@@ -145,10 +143,16 @@ export function Sidebar({ profile, notificationBell, todoButton, assignedCompani
           )
         })}
       </nav>
-      <div className="border-t pt-4 space-y-2">
-        <div className="px-3">
-          <p className="text-sm font-medium truncate">{profile.full_name || profile.email}</p>
-          <p className="text-xs text-muted-foreground truncate">{profile.role}</p>
+      <Separator />
+      <div className="pt-4 space-y-3">
+        <div className="flex items-center gap-3 px-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600 shrink-0">
+            {(profile.full_name || profile.email || "?").charAt(0).toUpperCase()}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium truncate">{profile.full_name || profile.email}</p>
+            <p className="text-xs text-muted-foreground truncate">{profile.role}</p>
+          </div>
         </div>
         <button
           onClick={handleLogout}

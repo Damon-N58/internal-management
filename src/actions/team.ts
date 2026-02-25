@@ -3,30 +3,37 @@
 import { supabase } from "@/lib/supabase"
 import { revalidatePath } from "next/cache"
 import { requireAuth, isAdmin } from "@/lib/auth"
+import { clerkClient } from "@clerk/nextjs/server"
 import type { UserRole } from "@/types"
 
 export async function inviteUser(email: string, fullName: string, role: UserRole) {
   const profile = await requireAuth()
   if (!isAdmin(profile)) throw new Error("Admin only")
 
-  const { data, error } = await supabase.auth.admin.createUser({
-    email,
-    password: crypto.randomUUID().slice(0, 12),
-    email_confirm: true,
-    user_metadata: { full_name: fullName },
+  const client = await clerkClient()
+  const nameParts = fullName.trim().split(/\s+/)
+  const firstName = nameParts[0] || ""
+  const lastName = nameParts.slice(1).join(" ") || undefined
+
+  const user = await client.users.createUser({
+    emailAddress: [email],
+    firstName,
+    lastName,
+    skipPasswordRequirement: true,
   })
 
-  if (error) throw new Error(error.message)
-
-  if (data.user) {
-    await supabase
-      .from("profile")
-      .update({ full_name: fullName, role })
-      .eq("id", data.user.id)
-  }
+  await supabase
+    .from("profile")
+    .insert({
+      id: user.id,
+      email,
+      full_name: fullName,
+      role,
+      created_at: new Date().toISOString(),
+    })
 
   revalidatePath("/settings")
-  return data.user
+  return { id: user.id, email }
 }
 
 export async function updateUserRole(userId: string, role: UserRole) {

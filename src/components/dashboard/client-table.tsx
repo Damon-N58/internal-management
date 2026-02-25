@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 import type { Company, Deadline, ActivityLog, Blocker, Ticket } from "@/types"
@@ -37,8 +38,8 @@ export function ClientTable({ companies }: Props) {
   const sixtyDaysOut = addDays(new Date(), 60)
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
+    <Card>
+      <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
         <h3 className="text-lg font-semibold">All Clients</h3>
         <Tabs value={view} onValueChange={(v) => setView(v as View)}>
           <TabsList>
@@ -47,9 +48,8 @@ export function ClientTable({ companies }: Props) {
             <TabsTrigger value="engineering">Engineering View</TabsTrigger>
           </TabsList>
         </Tabs>
-      </div>
-
-      <div className="rounded-lg border bg-white">
+      </CardHeader>
+      <CardContent className="px-0 pb-0">
         <Table>
           <TableHeader>
             <TableRow>
@@ -199,7 +199,7 @@ export function ClientTable({ companies }: Props) {
             )}
           </TableBody>
         </Table>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }
