@@ -3,6 +3,7 @@ export type HealthScoreInput = {
   daysSinceLastActivity: number | null
   openPCRCount: number
   conversationVolume: number | null
+  daysUntilContractExpiry: number | null
 }
 
 export type HealthScoreBreakdown = {
@@ -10,6 +11,7 @@ export type HealthScoreBreakdown = {
   activityScore: number
   pcrScore: number
   usageScore: number | null
+  expiryScore: number
 }
 
 export type HealthScoreResult = {
@@ -18,7 +20,7 @@ export type HealthScoreResult = {
 }
 
 export function computeHealthScore(input: HealthScoreInput): HealthScoreResult {
-  const { openBlockerCount, daysSinceLastActivity, openPCRCount, conversationVolume } = input
+  const { openBlockerCount, daysSinceLastActivity, openPCRCount, conversationVolume, daysUntilContractExpiry } = input
 
   const blockerScore = Math.max(1, 5 - openBlockerCount)
 
@@ -46,7 +48,16 @@ export function computeHealthScore(input: HealthScoreInput): HealthScoreResult {
       ? 4
       : 5
 
-  const scores = [blockerScore, activityScore, pcrScore]
+  const expiryScore =
+    daysUntilContractExpiry === null
+      ? 5
+      : daysUntilContractExpiry > 60
+      ? 5
+      : daysUntilContractExpiry > 30
+      ? 3
+      : 1
+
+  const scores = [blockerScore, activityScore, pcrScore, expiryScore]
   if (usageScore !== null) scores.push(usageScore)
 
   const average = scores.reduce((a, b) => a + b, 0) / scores.length
@@ -54,6 +65,6 @@ export function computeHealthScore(input: HealthScoreInput): HealthScoreResult {
 
   return {
     score,
-    breakdown: { blockerScore, activityScore, pcrScore, usageScore },
+    breakdown: { blockerScore, activityScore, pcrScore, usageScore, expiryScore },
   }
 }

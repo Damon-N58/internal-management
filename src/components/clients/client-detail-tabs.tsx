@@ -40,6 +40,10 @@ type Props = {
 export function ClientDetailTabs({ company, teamMembers = [] }: Props) {
   const openBlockerCount = company.blocker.filter((b) => b.status === "Open").length
   const openTicketCount = company.ticket.filter((t) => t.status !== "Closed").length
+  const today = new Date().toISOString().slice(0, 10)
+  const todayActivityCount = company.activity_log.filter(
+    (l) => l.created_at.slice(0, 10) === today
+  ).length
 
   return (
     <Tabs defaultValue="overview">
@@ -63,9 +67,9 @@ export function ClientDetailTabs({ company, teamMembers = [] }: Props) {
         </TabsTrigger>
         <TabsTrigger value="activity">
           Activity
-          {company.activity_log.length > 0 && (
+          {todayActivityCount > 0 && (
             <span className="ml-1.5 rounded-full bg-slate-200 px-1.5 py-0.5 text-xs">
-              {company.activity_log.length}
+              {todayActivityCount}
             </span>
           )}
         </TabsTrigger>

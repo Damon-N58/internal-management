@@ -14,7 +14,8 @@ type EmployeeScore = {
 }
 
 function getTotalScore(e: EmployeeScore) {
-  return e.ticketsClosed * 10 + Math.round(e.efficiencyScore * 5) + e.streak * 3
+  const base = e.ticketsClosed * 10
+  return Math.round(base * (e.efficiencyScore / 100)) + e.streak * 3
 }
 
 function getInitials(name: string) {

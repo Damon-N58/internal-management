@@ -5,8 +5,10 @@ import { ClientDetailTabs } from "@/components/clients/client-detail-tabs"
 import { HealthBadge } from "@/components/health-badge"
 import { StatusBadge } from "@/components/status-badge"
 import Link from "next/link"
+import Image from "next/image"
 import { ChevronLeft } from "lucide-react"
 import { escalateStaleBlockers } from "@/actions/blockers"
+import { getFaviconUrl } from "@/lib/favicon"
 import type { FullCompany } from "@/components/clients/client-detail-tabs"
 import type { Profile } from "@/types"
 
@@ -68,7 +70,23 @@ export default async function ClientDetailPage({ params }: Props) {
 
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">{company.name}</h2>
+          <div className="flex items-center gap-3">
+            {getFaviconUrl(company.website) ? (
+              <Image
+                src={getFaviconUrl(company.website)!}
+                alt=""
+                width={28}
+                height={28}
+                className="rounded-sm shrink-0"
+                unoptimized
+              />
+            ) : (
+              <div className="h-7 w-7 rounded-sm bg-slate-200 flex items-center justify-center text-sm font-bold text-slate-500 shrink-0">
+                {company.name.charAt(0)}
+              </div>
+            )}
+            <h2 className="text-2xl font-bold tracking-tight">{company.name}</h2>
+          </div>
           <div className="mt-2 flex items-center gap-3 flex-wrap">
             <HealthBadge score={company.health_score} />
             <StatusBadge status={company.status} />

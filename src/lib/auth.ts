@@ -26,7 +26,7 @@ export async function getCurrentUser(): Promise<Profile | null> {
       id: user.id,
       email: user.emailAddresses[0]?.emailAddress ?? "",
       full_name: fullName,
-      role: "Member",
+      role: ((user.publicMetadata?.role as UserRole) || "Member"),
       created_at: new Date().toISOString(),
     })
     .select()

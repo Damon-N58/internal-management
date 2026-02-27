@@ -23,7 +23,6 @@ type Props = {
 
 const defaultForm = {
   email: "",
-  fullName: "",
   role: "Member" as UserRole,
 }
 
@@ -33,14 +32,14 @@ export function TeamTab({ profiles, currentUserId, isAdmin: admin }: Props) {
   const [error, setError] = useState("")
 
   const handleInvite = async () => {
-    if (!form.email.trim() || !form.fullName.trim()) return
+    if (!form.email.trim()) return
     setError("")
     setLoading(true)
     try {
-      await inviteUser(form.email, form.fullName, form.role)
+      await inviteUser(form.email, form.role)
       setForm(defaultForm)
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to invite user")
+      setError(e instanceof Error ? e.message : "Failed to send invitation")
     }
     setLoading(false)
   }
@@ -54,15 +53,7 @@ export function TeamTab({ profiles, currentUserId, isAdmin: admin }: Props) {
       {admin && (
         <div className="rounded-lg border bg-white p-4 space-y-4">
           <h3 className="text-sm font-semibold">Invite Team Member</h3>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <Label>Full Name</Label>
-              <Input
-                value={form.fullName}
-                onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                placeholder="Jane Smith"
-              />
-            </div>
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Email</Label>
               <Input
@@ -89,13 +80,16 @@ export function TeamTab({ profiles, currentUserId, isAdmin: admin }: Props) {
               </Select>
             </div>
           </div>
+          <p className="text-xs text-muted-foreground">
+            An invitation email will be sent via Clerk. The user will set their own name and password on sign-up.
+          </p>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <Button
             onClick={handleInvite}
-            disabled={loading || !form.email.trim() || !form.fullName.trim()}
+            disabled={loading || !form.email.trim()}
             size="sm"
           >
-            {loading ? "Inviting..." : "Send Invite"}
+            {loading ? "Sending..." : "Send Invitation"}
           </Button>
         </div>
       )}

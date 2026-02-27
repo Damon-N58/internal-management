@@ -7,7 +7,7 @@ export async function applyHealthScore(companyId: string) {
     await Promise.all([
       supabase
         .from("company")
-        .select("health_score, last_activity_at, conversation_volume")
+        .select("health_score, last_activity_at, conversation_volume, contract_end_date")
         .eq("id", companyId)
         .single(),
       supabase
@@ -27,11 +27,16 @@ export async function applyHealthScore(companyId: string) {
     ? differenceInDays(new Date(), new Date(company.last_activity_at))
     : null
 
+  const daysUntilContractExpiry = company.contract_end_date
+    ? differenceInDays(new Date(company.contract_end_date), new Date())
+    : null
+
   const result = computeHealthScore({
     openBlockerCount: openBlockerCount ?? 0,
     daysSinceLastActivity,
     openPCRCount: openPCRCount ?? 0,
     conversationVolume: company.conversation_volume,
+    daysUntilContractExpiry,
   })
 
   const oldScore = company.health_score
