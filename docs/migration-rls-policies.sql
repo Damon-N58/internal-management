@@ -11,12 +11,15 @@
 -- RLS entirely. These policies protect against direct DB access (pgAdmin,
 -- REST API calls with the anon key, etc.) and are a security safety net.
 --
+-- NOTE: agent_config RLS is handled in migration-agents.sql (run that first).
+--
 -- Safe to re-run: each policy is dropped before being (re)created.
 -- =============================================================================
 
 
 -- ---------------------------------------------------------------------------
--- 0. Enable RLS on every table
+-- 0. Enable RLS on all tables present in the initial schema
+--    (agent_config is excluded — it lives in migration-agents.sql)
 -- ---------------------------------------------------------------------------
 ALTER TABLE public.profile                  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_company_assignment  ENABLE ROW LEVEL SECURITY;
@@ -31,7 +34,6 @@ ALTER TABLE public.knowledge_base_entry     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notification             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.health_score_log         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.product_change_request   ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.agent_config             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.todo                     ENABLE ROW LEVEL SECURITY;
 
 
@@ -81,10 +83,10 @@ $$;
 --    UPDATE : own row, or admin
 --    DELETE : admin only
 -- ---------------------------------------------------------------------------
-DROP POLICY IF EXISTS "profile_select"       ON public.profile;
-DROP POLICY IF EXISTS "profile_insert"       ON public.profile;
-DROP POLICY IF EXISTS "profile_update"       ON public.profile;
-DROP POLICY IF EXISTS "profile_delete"       ON public.profile;
+DROP POLICY IF EXISTS "profile_select" ON public.profile;
+DROP POLICY IF EXISTS "profile_insert" ON public.profile;
+DROP POLICY IF EXISTS "profile_update" ON public.profile;
+DROP POLICY IF EXISTS "profile_delete" ON public.profile;
 
 CREATE POLICY "profile_select"
   ON public.profile FOR SELECT TO authenticated
@@ -163,9 +165,8 @@ CREATE POLICY "company_delete"
 
 -- ---------------------------------------------------------------------------
 -- 5. technical_vault  (sensitive credentials)
---    READ   : manager-or-above, or assigned member
---    WRITE  : manager-or-above, or assigned member
---    DELETE : admin only
+--    READ/WRITE : manager-or-above, or assigned member
+--    DELETE     : admin only
 -- ---------------------------------------------------------------------------
 DROP POLICY IF EXISTS "vault_select" ON public.technical_vault;
 DROP POLICY IF EXISTS "vault_insert" ON public.technical_vault;
@@ -198,9 +199,8 @@ CREATE POLICY "vault_delete"
 
 -- ---------------------------------------------------------------------------
 -- 6. activity_log  (immutable — no UPDATE)
---    READ   : manager-or-above, or assigned member
---    INSERT : manager-or-above, or assigned member
---    DELETE : admin only
+--    READ/INSERT : manager-or-above, or assigned member
+--    DELETE      : admin only
 -- ---------------------------------------------------------------------------
 DROP POLICY IF EXISTS "activity_log_select" ON public.activity_log;
 DROP POLICY IF EXISTS "activity_log_insert" ON public.activity_log;
@@ -227,8 +227,7 @@ CREATE POLICY "activity_log_delete"
 
 -- ---------------------------------------------------------------------------
 -- 7. ticket
---    READ/WRITE : manager-or-above, or assigned member
---    DELETE     : manager-or-above, or assigned member
+--    READ/WRITE/DELETE : manager-or-above, or assigned member
 -- ---------------------------------------------------------------------------
 DROP POLICY IF EXISTS "ticket_select" ON public.ticket;
 DROP POLICY IF EXISTS "ticket_insert" ON public.ticket;
@@ -265,9 +264,9 @@ CREATE POLICY "ticket_delete"
 -- ---------------------------------------------------------------------------
 -- 8. ticket_comment
 --    READ   : users assigned to the ticket's company (resolved via subquery)
---    INSERT : author must be self + must be assigned to the company
---    UPDATE : own comment only, or manager-or-above
---    DELETE : own comment only, or manager-or-above
+--    INSERT : author must be self + assigned to the company
+--    UPDATE : own comment, or manager-or-above
+--    DELETE : own comment, or manager-or-above
 -- ---------------------------------------------------------------------------
 DROP POLICY IF EXISTS "ticket_comment_select" ON public.ticket_comment;
 DROP POLICY IF EXISTS "ticket_comment_insert" ON public.ticket_comment;
@@ -421,7 +420,7 @@ CREATE POLICY "kb_delete"
 -- 12. notification
 --     company_id IS NULL = global (visible to all authenticated users)
 --     company_id IS NOT NULL = scoped to assigned users for that company
---     INSERT : manager-or-above (automated writes use service role)
+--     INSERT : manager-or-above (automated writes go through service role)
 --     UPDATE : any user who can see the notification (e.g. mark as read)
 --     DELETE : admin only
 -- ---------------------------------------------------------------------------
@@ -444,7 +443,7 @@ CREATE POLICY "notification_insert"
 
 CREATE POLICY "notification_update"
   ON public.notification FOR UPDATE TO authenticated
-  USING  (
+  USING (
     company_id IS NULL
     OR public.rls_is_manager_or_above()
     OR public.rls_is_assigned_to(company_id)
@@ -463,7 +462,7 @@ CREATE POLICY "notification_delete"
 -- ---------------------------------------------------------------------------
 -- 13. health_score_log  (immutable history — no UPDATE)
 --     READ   : manager-or-above, or assigned member
---     INSERT : manager-or-above (automated writes use service role)
+--     INSERT : manager-or-above (automated writes go through service role)
 --     DELETE : admin only
 -- ---------------------------------------------------------------------------
 DROP POLICY IF EXISTS "health_log_select" ON public.health_score_log;
@@ -488,10 +487,8 @@ CREATE POLICY "health_log_delete"
 
 -- ---------------------------------------------------------------------------
 -- 14. product_change_request  (no company_id — it's the shared product roadmap)
---     READ   : all authenticated users
---     INSERT : all authenticated users
---     UPDATE : manager-or-above
---     DELETE : manager-or-above
+--     READ/INSERT : all authenticated users
+--     UPDATE/DELETE : manager-or-above
 -- ---------------------------------------------------------------------------
 DROP POLICY IF EXISTS "pcr_select" ON public.product_change_request;
 DROP POLICY IF EXISTS "pcr_insert" ON public.product_change_request;
@@ -517,42 +514,7 @@ CREATE POLICY "pcr_delete"
 
 
 -- ---------------------------------------------------------------------------
--- 15. agent_config
---     READ/WRITE : manager-or-above, or assigned member
---     DELETE     : manager-or-above only
--- ---------------------------------------------------------------------------
-DROP POLICY IF EXISTS "agent_select" ON public.agent_config;
-DROP POLICY IF EXISTS "agent_insert" ON public.agent_config;
-DROP POLICY IF EXISTS "agent_update" ON public.agent_config;
-DROP POLICY IF EXISTS "agent_delete" ON public.agent_config;
-
-CREATE POLICY "agent_select"
-  ON public.agent_config FOR SELECT TO authenticated
-  USING (
-    public.rls_is_manager_or_above()
-    OR public.rls_is_assigned_to(company_id)
-  );
-
-CREATE POLICY "agent_insert"
-  ON public.agent_config FOR INSERT TO authenticated
-  WITH CHECK (
-    public.rls_is_manager_or_above()
-    OR public.rls_is_assigned_to(company_id)
-  );
-
-CREATE POLICY "agent_update"
-  ON public.agent_config FOR UPDATE TO authenticated
-  USING  (public.rls_is_manager_or_above() OR public.rls_is_assigned_to(company_id))
-  WITH CHECK (public.rls_is_manager_or_above() OR public.rls_is_assigned_to(company_id));
-
-CREATE POLICY "agent_delete"
-  ON public.agent_config FOR DELETE TO authenticated
-  USING (public.rls_is_manager_or_above());
-
-
--- ---------------------------------------------------------------------------
--- 16. todo
---     Fully private — each user sees and manages only their own todos
+-- 15. todo  (fully private — each user sees only their own rows)
 -- ---------------------------------------------------------------------------
 DROP POLICY IF EXISTS "todo_select" ON public.todo;
 DROP POLICY IF EXISTS "todo_insert" ON public.todo;
