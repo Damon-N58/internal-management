@@ -56,10 +56,13 @@ export function ProductTable({ pcrs, profiles }: Props) {
   const [saving, setSaving] = useState(false)
   const [overrides, setOverrides] = useState<Record<string, { status: string; completed_by?: string }>>({})
 
-  const filtered = filter === "All" ? pcrs : pcrs.filter((p) => {
-    const effectiveStatus = overrides[p.id]?.status ?? p.status
-    return effectiveStatus === filter
+  const effectivePcrs = pcrs.map((p) => {
+    const ov = overrides[p.id]
+    if (!ov) return p
+    return { ...p, status: ov.status as PCRStatus, completed_by: ov.completed_by ?? p.completed_by }
   })
+
+  const filtered = filter === "All" ? effectivePcrs : effectivePcrs.filter((p) => p.status === filter)
 
   const handleStatusChange = async (pcrId: string, newStatus: string) => {
     if (newStatus === "Completed") {
@@ -98,7 +101,7 @@ export function ProductTable({ pcrs, profiles }: Props) {
                   {s}
                   {s !== "All" && (
                     <span className="ml-1.5 rounded-full bg-slate-200 px-1.5 py-0.5 text-xs">
-                      {pcrs.filter((p) => p.status === s).length}
+                      {effectivePcrs.filter((p) => p.status === s).length}
                     </span>
                   )}
                 </TabsTrigger>
@@ -150,7 +153,7 @@ export function ProductTable({ pcrs, profiles }: Props) {
                     </TableCell>
                     <TableCell>
                       <Select
-                        value={overrides[pcr.id]?.status ?? pcr.status}
+                        value={pcr.status}
                         onValueChange={(val) => handleStatusChange(pcr.id, val)}
                       >
                         <SelectTrigger className="h-7 w-36 text-xs border-slate-200">
@@ -162,12 +165,11 @@ export function ProductTable({ pcrs, profiles }: Props) {
                           <SelectItem value="Completed">Completed</SelectItem>
                         </SelectContent>
                       </Select>
-                      {(overrides[pcr.id]?.status ?? pcr.status) === "Completed" &&
-                        (overrides[pcr.id]?.completed_by ?? pcr.completed_by) && (
+                      {pcr.status === "Completed" && pcr.completed_by && (
                         <div className="flex items-center gap-1 mt-1">
                           <CheckCircle2 className="h-3 w-3 text-green-500 shrink-0" />
                           <span className="text-[11px] text-muted-foreground">
-                            {overrides[pcr.id]?.completed_by ?? pcr.completed_by}
+                            {pcr.completed_by}
                           </span>
                         </div>
                       )}
