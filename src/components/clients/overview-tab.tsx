@@ -1,12 +1,19 @@
 "use client"
 
 import { useState } from "react"
-import { format } from "date-fns"
-import { ExternalLink, FolderOpen, Pencil } from "lucide-react"
+import { format, addDays, differenceInDays, isBefore } from "date-fns"
+import {
+  ExternalLink,
+  FolderOpen,
+  Pencil,
+  AlertTriangle,
+  Calendar,
+  CheckCircle2,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { updateGoogleDriveUrl } from "@/actions/companies"
+import { updateGoogleDriveUrl, updateContractInfo } from "@/actions/companies"
 import type { Company, TechnicalVault, ActivityLog, Deadline, Blocker } from "@/types"
 
 type FullCompany = Company & {
@@ -16,13 +23,69 @@ type FullCompany = Company & {
   blocker: Blocker[]
 }
 
+type AttentionReason = {
+  label: string
+  severity: "critical" | "warning"
+}
+
+function getAttentionReasons(company: FullCompany): AttentionReason[] {
+  const reasons: AttentionReason[] = []
+  const sixtyDaysOut = addDays(new Date(), 60)
+
+  if (company.health_score > 0 && company.health_score <= 2) {
+    reasons.push({ label: `Health score: ${company.health_score}/5`, severity: "critical" })
+  }
+
+  const openBlockers = company.blocker.filter((b) => b.status === "Open")
+  const staleBlockers = openBlockers.filter(
+    (b) => differenceInDays(new Date(), new Date(b.updated_at)) > 5
+  )
+  if (staleBlockers.length > 0) {
+    reasons.push({
+      label: `${staleBlockers.length} stale blocker${staleBlockers.length > 1 ? "s" : ""}`,
+      severity: "warning",
+    })
+  }
+  if (openBlockers.length > 0 && company.health_score <= 3) {
+    reasons.push({
+      label: `${openBlockers.length} open blocker${openBlockers.length > 1 ? "s" : ""}`,
+      severity: "warning",
+    })
+  }
+
+  if (
+    company.contract_end_date &&
+    !company.contract_renewed &&
+    isBefore(new Date(company.contract_end_date), sixtyDaysOut)
+  ) {
+    const daysLeft = differenceInDays(new Date(company.contract_end_date), new Date())
+    reasons.push({
+      label:
+        daysLeft < 0
+          ? `Contract expired ${Math.abs(daysLeft)} day${Math.abs(daysLeft) !== 1 ? "s" : ""} ago`
+          : `Contract expires in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`,
+      severity: daysLeft <= 14 ? "critical" : "warning",
+    })
+  }
+
+  return reasons
+}
+
 export function OverviewTab({ company }: { company: FullCompany }) {
   const [handoffOpen, setHandoffOpen] = useState(false)
   const [copied, setCopied] = useState(false)
+
+  // Google Drive state
   const [editingDrive, setEditingDrive] = useState(false)
   const [driveUrl, setDriveUrl] = useState(company.google_drive_url ?? "")
 
+  // Contract state
+  const [editingContract, setEditingContract] = useState(false)
+  const [contractEndDate, setContractEndDate] = useState(company.contract_end_date ?? "")
+  const [contractRenewed, setContractRenewed] = useState(company.contract_renewed ?? false)
+
   const openBlockers = company.blocker.filter((b) => b.status === "Open")
+  const attentionReasons = getAttentionReasons(company)
   const handoffMarkdown = generateHandoffMarkdown(company)
 
   const handleCopy = () => {
@@ -36,8 +99,61 @@ export function OverviewTab({ company }: { company: FullCompany }) {
     setEditingDrive(false)
   }
 
+  const handleSaveContract = async () => {
+    await updateContractInfo(company.id, {
+      contract_end_date: contractEndDate || null,
+      contract_renewed: contractRenewed,
+    })
+    setEditingContract(false)
+  }
+
+  const handleCancelContract = () => {
+    setContractEndDate(company.contract_end_date ?? "")
+    setContractRenewed(company.contract_renewed ?? false)
+    setEditingContract(false)
+  }
+
+  const contractDaysLeft = company.contract_end_date
+    ? differenceInDays(new Date(company.contract_end_date), new Date())
+    : null
+
   return (
     <div className="space-y-6">
+      {attentionReasons.length > 0 && (
+        <div
+          className={`rounded-lg border p-4 ${
+            attentionReasons.some((r) => r.severity === "critical")
+              ? "border-red-200 bg-red-50"
+              : "border-amber-200 bg-amber-50"
+          }`}
+        >
+          <div className="flex items-center gap-2 mb-2.5">
+            <AlertTriangle
+              className={`h-4 w-4 ${
+                attentionReasons.some((r) => r.severity === "critical")
+                  ? "text-red-600"
+                  : "text-amber-600"
+              }`}
+            />
+            <h3 className="text-sm font-semibold text-slate-800">Why this account needs attention</h3>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {attentionReasons.map((r, i) => (
+              <span
+                key={i}
+                className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                  r.severity === "critical"
+                    ? "bg-red-100 text-red-700"
+                    : "bg-amber-100 text-amber-700"
+                }`}
+              >
+                {r.label}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="rounded-lg border bg-white p-4">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
@@ -82,6 +198,97 @@ export function OverviewTab({ company }: { company: FullCompany }) {
               Add one
             </button>
           </p>
+        )}
+      </div>
+
+      <div className="rounded-lg border bg-white p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Contract
+          </h3>
+          {!editingContract && (
+            <button
+              onClick={() => setEditingContract(true)}
+              className="text-muted-foreground hover:text-slate-900"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+
+        {editingContract ? (
+          <div className="space-y-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-muted-foreground font-medium">Contract End Date</label>
+              <Input
+                type="date"
+                value={contractEndDate}
+                onChange={(e) => setContractEndDate(e.target.value)}
+                className="text-sm w-48"
+              />
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer w-fit">
+              <input
+                type="checkbox"
+                checked={contractRenewed}
+                onChange={(e) => setContractRenewed(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 accent-slate-700"
+              />
+              <span className="text-sm text-slate-700">Contract renewed</span>
+            </label>
+            <div className="flex gap-2 pt-1">
+              <Button size="sm" onClick={handleSaveContract}>Save</Button>
+              <Button size="sm" variant="outline" onClick={handleCancelContract}>Cancel</Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {company.contract_end_date ? (
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-sm text-slate-700">
+                  {format(new Date(company.contract_end_date), "MMMM d, yyyy")}
+                </span>
+                {contractDaysLeft !== null && (
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      contractDaysLeft < 0
+                        ? "bg-red-100 text-red-700"
+                        : contractDaysLeft <= 14
+                        ? "bg-red-100 text-red-700"
+                        : contractDaysLeft <= 60
+                        ? "bg-amber-100 text-amber-700"
+                        : "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {contractDaysLeft < 0
+                      ? `Expired ${Math.abs(contractDaysLeft)}d ago`
+                      : `${contractDaysLeft}d remaining`}
+                  </span>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No contract end date set.{" "}
+                <button
+                  onClick={() => setEditingContract(true)}
+                  className="text-blue-600 hover:underline"
+                >
+                  Add one
+                </button>
+              </p>
+            )}
+            <div className="flex items-center gap-1.5">
+              {company.contract_renewed ? (
+                <>
+                  <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                  <span className="text-xs text-green-700 font-medium">Contract renewed</span>
+                </>
+              ) : (
+                <span className="text-xs text-muted-foreground">Not yet renewed</span>
+              )}
+            </div>
+          </div>
         )}
       </div>
 
@@ -204,6 +411,10 @@ function generateHandoffMarkdown(company: FullCompany): string {
           .join("\n")
       : "No recent activity."
 
+  const contractLine = company.contract_end_date
+    ? `- Contract End: ${format(new Date(company.contract_end_date), "MMMM d, yyyy")} (${company.contract_renewed ? "Renewed" : "Not renewed"})`
+    : "- Contract End: Not set"
+
   return `# Handoff Report: ${company.name}
 Generated: ${format(new Date(), "MMMM d, yyyy 'at' h:mm a")}
 
@@ -213,6 +424,7 @@ Generated: ${format(new Date(), "MMMM d, yyyy 'at' h:mm a")}
 - Primary CSM: ${company.primary_csm}
 - Implementation Lead: ${company.implementation_lead}
 ${company.second_lead ? `- Second Lead: ${company.second_lead}` : ""}
+${contractLine}
 
 ## Current Objectives
 ${company.current_objectives ?? "None recorded."}

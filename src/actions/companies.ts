@@ -10,6 +10,33 @@ function genId() {
   return crypto.randomUUID().replace(/-/g, "").slice(0, 25)
 }
 
+async function syncCompanyAssignments(companyId: string, names: (string | null | undefined)[]) {
+  const validNames = names.filter((n): n is string => !!n && n !== "_none")
+  if (validNames.length === 0) return
+
+  const { data: profiles } = await supabase
+    .from("profile")
+    .select("id")
+    .in("full_name", validNames)
+
+  if (!profiles || profiles.length === 0) return
+
+  const { data: existing } = await supabase
+    .from("user_company_assignment")
+    .select("user_id")
+    .eq("company_id", companyId)
+
+  const existingIds = new Set((existing ?? []).map((e) => e.user_id))
+
+  const toInsert = profiles
+    .filter((p) => !existingIds.has(p.id))
+    .map((p) => ({ id: crypto.randomUUID(), user_id: p.id, company_id: companyId }))
+
+  if (toInsert.length > 0) {
+    await supabase.from("user_company_assignment").insert(toInsert)
+  }
+}
+
 export async function updateCompanyStatus(companyId: string, status: CompanyStatus) {
   const { data: current } = await supabase
     .from("company")
@@ -74,7 +101,16 @@ export async function createCompany(data: {
 
   if (error) return { error: error.message }
 
-  await writeActivityLog(id, `Company "${data.name}" created`, "Automated")
+  await Promise.all([
+    writeActivityLog(id, `Company "${data.name}" created`, "Automated"),
+    syncCompanyAssignments(id, [
+      data.primary_csm,
+      data.implementation_lead,
+      data.second_lead,
+      data.third_lead,
+    ]),
+  ])
+
   revalidatePath("/")
   revalidatePath("/clients")
   return { id }
@@ -90,8 +126,35 @@ export async function updateCompanyStaff(
     .update({ [field]: value ?? null })
     .eq("id", companyId)
 
+  const { data: company } = await supabase
+    .from("company")
+    .select("primary_csm, implementation_lead, second_lead, third_lead")
+    .eq("id", companyId)
+    .single()
+
+  if (company) {
+    await syncCompanyAssignments(companyId, [
+      company.primary_csm,
+      company.implementation_lead,
+      company.second_lead,
+      company.third_lead,
+    ])
+  }
+
   revalidatePath("/settings")
   revalidatePath("/clients")
+  revalidatePath(`/clients/${companyId}`)
+}
+
+export async function updateContractInfo(
+  companyId: string,
+  data: { contract_end_date: string | null; contract_renewed: boolean }
+) {
+  await supabase
+    .from("company")
+    .update({ contract_end_date: data.contract_end_date, contract_renewed: data.contract_renewed })
+    .eq("id", companyId)
+
   revalidatePath(`/clients/${companyId}`)
 }
 

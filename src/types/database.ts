@@ -3,6 +3,46 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      agent_config: {
+        Row: {
+          id: string
+          company_id: string
+          agent_name: string
+          description: string | null
+          prompt: string | null
+          channel: string | null
+          tool_calls: string | null
+          external_resources: string | null
+          weekly_tasks: string | null
+          notes: string | null
+          sort_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          agent_name: string
+          description?: string | null
+          prompt?: string | null
+          channel?: string | null
+          tool_calls?: string | null
+          external_resources?: string | null
+          weekly_tasks?: string | null
+          notes?: string | null
+          sort_order?: number
+          created_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["agent_config"]["Insert"]>
+        Relationships: [
+          {
+            foreignKeyName: "agent_config_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company: {
         Row: {
           id: string
@@ -11,6 +51,7 @@ export type Database = {
           priority: number
           status: string
           contract_end_date: string | null
+          contract_renewed: boolean
           primary_csm: string
           implementation_lead: string
           second_lead: string | null
@@ -33,6 +74,7 @@ export type Database = {
           priority?: number
           status: string
           contract_end_date?: string | null
+          contract_renewed?: boolean
           primary_csm: string
           implementation_lead: string
           second_lead?: string | null
