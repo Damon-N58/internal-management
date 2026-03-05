@@ -5,7 +5,7 @@
 
 CREATE TABLE IF NOT EXISTS public.agent_config (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id uuid NOT NULL REFERENCES public.company(id) ON DELETE CASCADE,
+  company_id text NOT NULL REFERENCES public.company(id) ON DELETE CASCADE,
   agent_name text NOT NULL,
   description text,
   prompt text,
