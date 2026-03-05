@@ -55,9 +55,16 @@ export function Sidebar({ profile, notificationBell, todoButton, assignedCompani
   return (
     <aside className="flex h-screen w-60 flex-col border-r bg-white px-4 py-6 shrink-0">
       <div className="mb-8 flex items-center justify-between px-2">
-        <div>
-          <h1 className="text-lg font-semibold tracking-tight">Nineteen58</h1>
-          <p className="text-xs text-muted-foreground">Internal Ops Portal</p>
+        <div className="flex items-center gap-3">
+          <Image
+            src="https://app.nineteen58.dev/favicons/Nineteen58.ico"
+            alt="Nineteen58"
+            width={32}
+            height={32}
+            className="rounded-md shrink-0"
+            unoptimized
+          />
+          <h1 className="text-2xl font-bold tracking-tight leading-none">Portal</h1>
         </div>
         <div className="flex items-center gap-1">
           {todoButton}
