@@ -11,15 +11,18 @@
 -- RLS entirely. These policies protect against direct DB access (pgAdmin,
 -- REST API calls with the anon key, etc.) and are a security safety net.
 --
--- NOTE: agent_config RLS is handled in migration-agents.sql (run that first).
+-- NOTE: agent_config RLS is handled in migration-agents.sql (run that after).
 --
 -- Safe to re-run: each policy is dropped before being (re)created.
+--
+-- Type note: profile.id and user_company_assignment.user_id are stored as
+-- text (Clerk IDs), but auth.uid() returns uuid. All comparisons cast
+-- auth.uid() to text explicitly to avoid "operator does not exist" errors.
 -- =============================================================================
 
 
 -- ---------------------------------------------------------------------------
 -- 0. Enable RLS on all tables present in the initial schema
---    (agent_config is excluded — it lives in migration-agents.sql)
 -- ---------------------------------------------------------------------------
 ALTER TABLE public.profile                  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_company_assignment  ENABLE ROW LEVEL SECURITY;
@@ -39,10 +42,9 @@ ALTER TABLE public.todo                     ENABLE ROW LEVEL SECURITY;
 
 -- ---------------------------------------------------------------------------
 -- 1. Helper functions
---    SECURITY DEFINER: runs as the function owner so they can query the
---    profile and user_company_assignment tables without being blocked by
---    those tables' own policies. Marked STABLE so Postgres can cache
---    the result within a single query.
+--    auth.uid() returns uuid; id columns are text — cast explicitly.
+--    SECURITY DEFINER so these can read profile/uca without being blocked
+--    by those tables' own policies. STABLE lets Postgres cache per query.
 -- ---------------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION public.rls_is_admin()
@@ -51,7 +53,7 @@ LANGUAGE sql SECURITY DEFINER STABLE
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.profile
-    WHERE id = auth.uid() AND role = 'Admin'
+    WHERE id = auth.uid()::text AND role = 'Admin'
   );
 $$;
 
@@ -61,17 +63,18 @@ LANGUAGE sql SECURITY DEFINER STABLE
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.profile
-    WHERE id = auth.uid() AND role IN ('Admin', 'Manager')
+    WHERE id = auth.uid()::text AND role IN ('Admin', 'Manager')
   );
 $$;
 
+-- cid is the company_id being checked (text/uuid stored as text)
 CREATE OR REPLACE FUNCTION public.rls_is_assigned_to(cid text)
 RETURNS boolean
 LANGUAGE sql SECURITY DEFINER STABLE
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.user_company_assignment
-    WHERE user_id = auth.uid() AND company_id = cid
+    WHERE user_id = auth.uid()::text AND company_id = cid
   );
 $$;
 
@@ -94,12 +97,12 @@ CREATE POLICY "profile_select"
 
 CREATE POLICY "profile_insert"
   ON public.profile FOR INSERT TO authenticated
-  WITH CHECK (id = auth.uid() OR public.rls_is_admin());
+  WITH CHECK (id = auth.uid()::text OR public.rls_is_admin());
 
 CREATE POLICY "profile_update"
   ON public.profile FOR UPDATE TO authenticated
-  USING  (id = auth.uid() OR public.rls_is_admin())
-  WITH CHECK (id = auth.uid() OR public.rls_is_admin());
+  USING  (id = auth.uid()::text OR public.rls_is_admin())
+  WITH CHECK (id = auth.uid()::text OR public.rls_is_admin());
 
 CREATE POLICY "profile_delete"
   ON public.profile FOR DELETE TO authenticated
@@ -111,7 +114,6 @@ CREATE POLICY "profile_delete"
 --    READ   : any authenticated user (sidebar needs to resolve assignments)
 --    INSERT : manager or above
 --    DELETE : manager or above
---    (no UPDATE — rows are created and removed, never mutated)
 -- ---------------------------------------------------------------------------
 DROP POLICY IF EXISTS "uca_select" ON public.user_company_assignment;
 DROP POLICY IF EXISTS "uca_insert" ON public.user_company_assignment;
@@ -263,7 +265,7 @@ CREATE POLICY "ticket_delete"
 
 -- ---------------------------------------------------------------------------
 -- 8. ticket_comment
---    READ   : users assigned to the ticket's company (resolved via subquery)
+--    READ   : users assigned to the ticket's company (via subquery)
 --    INSERT : author must be self + assigned to the company
 --    UPDATE : own comment, or manager-or-above
 --    DELETE : own comment, or manager-or-above
@@ -287,7 +289,7 @@ CREATE POLICY "ticket_comment_select"
 CREATE POLICY "ticket_comment_insert"
   ON public.ticket_comment FOR INSERT TO authenticated
   WITH CHECK (
-    author_id = auth.uid()
+    author_id = auth.uid()::text
     AND (
       public.rls_is_manager_or_above()
       OR EXISTS (
@@ -300,12 +302,12 @@ CREATE POLICY "ticket_comment_insert"
 
 CREATE POLICY "ticket_comment_update"
   ON public.ticket_comment FOR UPDATE TO authenticated
-  USING  (author_id = auth.uid() OR public.rls_is_manager_or_above())
-  WITH CHECK (author_id = auth.uid() OR public.rls_is_manager_or_above());
+  USING  (author_id = auth.uid()::text OR public.rls_is_manager_or_above())
+  WITH CHECK (author_id = auth.uid()::text OR public.rls_is_manager_or_above());
 
 CREATE POLICY "ticket_comment_delete"
   ON public.ticket_comment FOR DELETE TO authenticated
-  USING (author_id = auth.uid() OR public.rls_is_manager_or_above());
+  USING (author_id = auth.uid()::text OR public.rls_is_manager_or_above());
 
 
 -- ---------------------------------------------------------------------------
@@ -486,7 +488,7 @@ CREATE POLICY "health_log_delete"
 
 
 -- ---------------------------------------------------------------------------
--- 14. product_change_request  (no company_id — it's the shared product roadmap)
+-- 14. product_change_request  (no company_id — shared product roadmap)
 --     READ/INSERT : all authenticated users
 --     UPDATE/DELETE : manager-or-above
 -- ---------------------------------------------------------------------------
@@ -523,17 +525,17 @@ DROP POLICY IF EXISTS "todo_delete" ON public.todo;
 
 CREATE POLICY "todo_select"
   ON public.todo FOR SELECT TO authenticated
-  USING (user_id = auth.uid());
+  USING (user_id = auth.uid()::text);
 
 CREATE POLICY "todo_insert"
   ON public.todo FOR INSERT TO authenticated
-  WITH CHECK (user_id = auth.uid());
+  WITH CHECK (user_id = auth.uid()::text);
 
 CREATE POLICY "todo_update"
   ON public.todo FOR UPDATE TO authenticated
-  USING  (user_id = auth.uid())
-  WITH CHECK (user_id = auth.uid());
+  USING  (user_id = auth.uid()::text)
+  WITH CHECK (user_id = auth.uid()::text);
 
 CREATE POLICY "todo_delete"
   ON public.todo FOR DELETE TO authenticated
-  USING (user_id = auth.uid());
+  USING (user_id = auth.uid()::text);
