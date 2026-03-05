@@ -60,6 +60,19 @@ export async function updateCompanyStatus(companyId: string, status: CompanyStat
   revalidatePath(`/clients/${companyId}`)
 }
 
+export async function updateCompanyTextField(
+  companyId: string,
+  field: "current_objectives" | "future_work",
+  value: string
+) {
+  await supabase
+    .from("company")
+    .update({ [field]: value || null })
+    .eq("id", companyId)
+
+  revalidatePath(`/clients/${companyId}`)
+}
+
 export async function updateGoogleDriveUrl(companyId: string, url: string) {
   await supabase
     .from("company")

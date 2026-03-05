@@ -11,8 +11,9 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { updateGoogleDriveUrl, updateContractInfo } from "@/actions/companies"
+import { updateGoogleDriveUrl, updateContractInfo, updateCompanyTextField } from "@/actions/companies"
 import type { Company, TechnicalVault, ActivityLog, Deadline, Blocker } from "@/types"
 
 type FullCompany = Company & {
@@ -299,8 +300,16 @@ export function OverviewTab({ company }: { company: FullCompany }) {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <Section title="Current Objectives" content={company.current_objectives} />
-        <Section title="Future Work" content={company.future_work} />
+        <EditableSection
+          title="Current Objectives"
+          content={company.current_objectives}
+          onSave={(val) => updateCompanyTextField(company.id, "current_objectives", val)}
+        />
+        <EditableSection
+          title="Future Work"
+          content={company.future_work}
+          onSave={(val) => updateCompanyTextField(company.id, "future_work", val)}
+        />
       </div>
 
       <div className="rounded-lg border bg-white p-4">
@@ -363,19 +372,63 @@ export function OverviewTab({ company }: { company: FullCompany }) {
   )
 }
 
-function Section({
+function EditableSection({
   title,
   content,
+  onSave,
 }: {
   title: string
   content: string | null | undefined
+  onSave: (value: string) => Promise<void>
 }) {
+  const [editing, setEditing] = useState(false)
+  const [value, setValue] = useState(content ?? "")
+
+  const handleSave = async () => {
+    await onSave(value)
+    setEditing(false)
+  }
+
+  const handleCancel = () => {
+    setValue(content ?? "")
+    setEditing(false)
+  }
+
   return (
     <div className="rounded-lg border bg-white p-4">
-      <h3 className="mb-2 text-sm font-semibold text-slate-700">{title}</h3>
-      <p className="text-sm text-muted-foreground leading-relaxed">
-        {content ?? "No data recorded."}
-      </p>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-semibold text-slate-700">{title}</h3>
+        {!editing && (
+          <button
+            onClick={() => setEditing(true)}
+            className="text-muted-foreground hover:text-slate-900"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+      {editing ? (
+        <div className="space-y-2">
+          <Textarea
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            className="text-sm min-h-[100px] resize-none"
+            autoFocus
+          />
+          <div className="flex gap-2">
+            <Button size="sm" onClick={handleSave}>Save</Button>
+            <Button size="sm" variant="outline" onClick={handleCancel}>Cancel</Button>
+          </div>
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+          {content ?? (
+            <button onClick={() => setEditing(true)} className="text-blue-600 hover:underline">
+              Add {title.toLowerCase()}
+            </button>
+          )}
+        </p>
+      )}
     </div>
   )
 }
