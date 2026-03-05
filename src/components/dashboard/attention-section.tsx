@@ -42,12 +42,14 @@ function getAttentionReasons(company: CompanyWithRelations): AttentionReason[] {
 
   if (
     company.contract_end_date &&
-    !company.contract_renewed &&
     isBefore(new Date(company.contract_end_date), sixtyDaysOut)
   ) {
     const daysLeft = differenceInDays(new Date(company.contract_end_date), new Date())
     reasons.push({
-      label: `Contract expires in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`,
+      label:
+        daysLeft < 0
+          ? `Contract expired ${Math.abs(daysLeft)} day${Math.abs(daysLeft) !== 1 ? "s" : ""} ago`
+          : `Contract expires in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`,
       severity: daysLeft <= 14 ? "critical" : "warning",
     })
   }

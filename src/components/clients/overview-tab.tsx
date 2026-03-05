@@ -8,7 +8,6 @@ import {
   Pencil,
   AlertTriangle,
   Calendar,
-  CheckCircle2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -53,11 +52,7 @@ function getAttentionReasons(company: FullCompany): AttentionReason[] {
     })
   }
 
-  if (
-    company.contract_end_date &&
-    !company.contract_renewed &&
-    isBefore(new Date(company.contract_end_date), sixtyDaysOut)
-  ) {
+  if (company.contract_end_date && isBefore(new Date(company.contract_end_date), sixtyDaysOut)) {
     const daysLeft = differenceInDays(new Date(company.contract_end_date), new Date())
     reasons.push({
       label:
@@ -81,12 +76,19 @@ export function OverviewTab({ company }: { company: FullCompany }) {
 
   // Contract state
   const [editingContract, setEditingContract] = useState(false)
+  const [contractStartDate, setContractStartDate] = useState(company.contract_start_date ?? "")
   const [contractEndDate, setContractEndDate] = useState(company.contract_end_date ?? "")
-  const [contractRenewed, setContractRenewed] = useState(company.contract_renewed ?? false)
 
   const openBlockers = company.blocker.filter((b) => b.status === "Open")
   const attentionReasons = getAttentionReasons(company)
   const handoffMarkdown = generateHandoffMarkdown(company)
+
+  const hasContract = !!company.contract_start_date || !!company.contract_end_date
+
+  const contractDaysLeft =
+    company.contract_end_date
+      ? differenceInDays(new Date(company.contract_end_date), new Date())
+      : null
 
   const handleCopy = () => {
     navigator.clipboard.writeText(handoffMarkdown)
@@ -101,21 +103,24 @@ export function OverviewTab({ company }: { company: FullCompany }) {
 
   const handleSaveContract = async () => {
     await updateContractInfo(company.id, {
+      contract_start_date: contractStartDate || null,
       contract_end_date: contractEndDate || null,
-      contract_renewed: contractRenewed,
     })
     setEditingContract(false)
   }
 
   const handleCancelContract = () => {
+    setContractStartDate(company.contract_start_date ?? "")
     setContractEndDate(company.contract_end_date ?? "")
-    setContractRenewed(company.contract_renewed ?? false)
     setEditingContract(false)
   }
 
-  const contractDaysLeft = company.contract_end_date
-    ? differenceInDays(new Date(company.contract_end_date), new Date())
-    : null
+  const handleClearContract = async () => {
+    setContractStartDate("")
+    setContractEndDate("")
+    await updateContractInfo(company.id, { contract_start_date: null, contract_end_date: null })
+    setEditingContract(false)
+  }
 
   return (
     <div className="space-y-6">
@@ -191,10 +196,7 @@ export function OverviewTab({ company }: { company: FullCompany }) {
         ) : (
           <p className="text-sm text-muted-foreground">
             No Google Drive link set.{" "}
-            <button
-              onClick={() => setEditingDrive(true)}
-              className="text-blue-600 hover:underline"
-            >
+            <button onClick={() => setEditingDrive(true)} className="text-blue-600 hover:underline">
               Add one
             </button>
           </p>
@@ -219,76 +221,80 @@ export function OverviewTab({ company }: { company: FullCompany }) {
 
         {editingContract ? (
           <div className="space-y-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-muted-foreground font-medium">Contract End Date</label>
-              <Input
-                type="date"
-                value={contractEndDate}
-                onChange={(e) => setContractEndDate(e.target.value)}
-                className="text-sm w-48"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-muted-foreground font-medium">Start Date</label>
+                <Input
+                  type="date"
+                  value={contractStartDate}
+                  onChange={(e) => setContractStartDate(e.target.value)}
+                  className="text-sm"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-muted-foreground font-medium">End Date</label>
+                <Input
+                  type="date"
+                  value={contractEndDate}
+                  onChange={(e) => setContractEndDate(e.target.value)}
+                  className="text-sm"
+                />
+              </div>
             </div>
-            <label className="flex items-center gap-2 cursor-pointer w-fit">
-              <input
-                type="checkbox"
-                checked={contractRenewed}
-                onChange={(e) => setContractRenewed(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 accent-slate-700"
-              />
-              <span className="text-sm text-slate-700">Contract renewed</span>
-            </label>
             <div className="flex gap-2 pt-1">
               <Button size="sm" onClick={handleSaveContract}>Save</Button>
               <Button size="sm" variant="outline" onClick={handleCancelContract}>Cancel</Button>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {company.contract_end_date ? (
-              <div className="flex items-center gap-3 flex-wrap">
-                <span className="text-sm text-slate-700">
-                  {format(new Date(company.contract_end_date), "MMMM d, yyyy")}
-                </span>
-                {contractDaysLeft !== null && (
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      contractDaysLeft < 0
-                        ? "bg-red-100 text-red-700"
-                        : contractDaysLeft <= 14
-                        ? "bg-red-100 text-red-700"
-                        : contractDaysLeft <= 60
-                        ? "bg-amber-100 text-amber-700"
-                        : "bg-slate-100 text-slate-600"
-                    }`}
-                  >
-                    {contractDaysLeft < 0
-                      ? `Expired ${Math.abs(contractDaysLeft)}d ago`
-                      : `${contractDaysLeft}d remaining`}
-                  </span>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No contract end date set.{" "}
-                <button
-                  onClick={() => setEditingContract(true)}
-                  className="text-blue-600 hover:underline"
+              {hasContract && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-slate-400 hover:text-red-600 ml-auto"
+                  onClick={handleClearContract}
                 >
-                  Add one
-                </button>
-              </p>
-            )}
-            <div className="flex items-center gap-1.5">
-              {company.contract_renewed ? (
-                <>
-                  <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
-                  <span className="text-xs text-green-700 font-medium">Contract renewed</span>
-                </>
-              ) : (
-                <span className="text-xs text-muted-foreground">Not yet renewed</span>
+                  No contract
+                </Button>
               )}
             </div>
           </div>
+        ) : hasContract ? (
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-sm text-slate-700">
+              {company.contract_start_date
+                ? format(new Date(company.contract_start_date), "MMM d, yyyy")
+                : "—"}
+              {" → "}
+              {company.contract_end_date
+                ? format(new Date(company.contract_end_date), "MMM d, yyyy")
+                : "—"}
+            </span>
+            {contractDaysLeft !== null && (
+              <span
+                className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                  contractDaysLeft < 0
+                    ? "bg-red-100 text-red-700"
+                    : contractDaysLeft <= 14
+                    ? "bg-red-100 text-red-700"
+                    : contractDaysLeft <= 60
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-slate-100 text-slate-600"
+                }`}
+              >
+                {contractDaysLeft < 0
+                  ? `Expired ${Math.abs(contractDaysLeft)}d ago`
+                  : `${contractDaysLeft}d remaining`}
+              </span>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            No contract set.{" "}
+            <button
+              onClick={() => setEditingContract(true)}
+              className="text-blue-600 hover:underline"
+            >
+              Add one
+            </button>
+          </p>
         )}
       </div>
 
@@ -411,9 +417,10 @@ function generateHandoffMarkdown(company: FullCompany): string {
           .join("\n")
       : "No recent activity."
 
-  const contractLine = company.contract_end_date
-    ? `- Contract End: ${format(new Date(company.contract_end_date), "MMMM d, yyyy")} (${company.contract_renewed ? "Renewed" : "Not renewed"})`
-    : "- Contract End: Not set"
+  const contractLine =
+    company.contract_start_date || company.contract_end_date
+      ? `- Contract: ${company.contract_start_date ? format(new Date(company.contract_start_date), "MMM d, yyyy") : "?"} → ${company.contract_end_date ? format(new Date(company.contract_end_date), "MMM d, yyyy") : "?"}`
+      : "- Contract: Not set"
 
   return `# Handoff Report: ${company.name}
 Generated: ${format(new Date(), "MMMM d, yyyy 'at' h:mm a")}

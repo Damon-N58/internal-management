@@ -50,8 +50,8 @@ export type Database = {
           health_score: number
           priority: number
           status: string
+          contract_start_date: string | null
           contract_end_date: string | null
-          contract_renewed: boolean
           primary_csm: string
           implementation_lead: string
           second_lead: string | null
@@ -73,8 +73,8 @@ export type Database = {
           health_score?: number
           priority?: number
           status: string
+          contract_start_date?: string | null
           contract_end_date?: string | null
-          contract_renewed?: boolean
           primary_csm: string
           implementation_lead: string
           second_lead?: string | null

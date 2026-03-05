@@ -148,11 +148,14 @@ export async function updateCompanyStaff(
 
 export async function updateContractInfo(
   companyId: string,
-  data: { contract_end_date: string | null; contract_renewed: boolean }
+  data: { contract_start_date: string | null; contract_end_date: string | null }
 ) {
   await supabase
     .from("company")
-    .update({ contract_end_date: data.contract_end_date, contract_renewed: data.contract_renewed })
+    .update({
+      contract_start_date: data.contract_start_date,
+      contract_end_date: data.contract_end_date,
+    })
     .eq("id", companyId)
 
   revalidatePath(`/clients/${companyId}`)
