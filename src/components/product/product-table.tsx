@@ -54,15 +54,21 @@ export function ProductTable({ pcrs, profiles }: Props) {
   const [completingId, setCompletingId] = useState<string | null>(null)
   const [completedBy, setCompletedBy] = useState("")
   const [saving, setSaving] = useState(false)
+  const [overrides, setOverrides] = useState<Record<string, { status: string; completed_by?: string }>>({})
 
-  const filtered = filter === "All" ? pcrs : pcrs.filter((p) => p.status === filter)
+  const filtered = filter === "All" ? pcrs : pcrs.filter((p) => {
+    const effectiveStatus = overrides[p.id]?.status ?? p.status
+    return effectiveStatus === filter
+  })
 
   const handleStatusChange = async (pcrId: string, newStatus: string) => {
     if (newStatus === "Completed") {
+      setOverrides((prev) => ({ ...prev, [pcrId]: { status: "Completed" } }))
       setCompletingId(pcrId)
       setCompletedBy("")
       return
     }
+    setOverrides((prev) => ({ ...prev, [pcrId]: { status: newStatus } }))
     await updatePCRStatus(pcrId, newStatus)
     router.refresh()
   }
@@ -70,6 +76,7 @@ export function ProductTable({ pcrs, profiles }: Props) {
   const handleConfirmComplete = async () => {
     if (!completingId || !completedBy) return
     setSaving(true)
+    setOverrides((prev) => ({ ...prev, [completingId]: { status: "Completed", completed_by: completedBy } }))
     await updatePCRStatus(completingId, "Completed", completedBy)
     setSaving(false)
     setCompletingId(null)
@@ -143,7 +150,7 @@ export function ProductTable({ pcrs, profiles }: Props) {
                     </TableCell>
                     <TableCell>
                       <Select
-                        value={pcr.status}
+                        value={overrides[pcr.id]?.status ?? pcr.status}
                         onValueChange={(val) => handleStatusChange(pcr.id, val)}
                       >
                         <SelectTrigger className="h-7 w-36 text-xs border-slate-200">
@@ -155,10 +162,13 @@ export function ProductTable({ pcrs, profiles }: Props) {
                           <SelectItem value="Completed">Completed</SelectItem>
                         </SelectContent>
                       </Select>
-                      {pcr.status === "Completed" && pcr.completed_by && (
+                      {(overrides[pcr.id]?.status ?? pcr.status) === "Completed" &&
+                        (overrides[pcr.id]?.completed_by ?? pcr.completed_by) && (
                         <div className="flex items-center gap-1 mt-1">
                           <CheckCircle2 className="h-3 w-3 text-green-500 shrink-0" />
-                          <span className="text-[11px] text-muted-foreground">{pcr.completed_by}</span>
+                          <span className="text-[11px] text-muted-foreground">
+                            {overrides[pcr.id]?.completed_by ?? pcr.completed_by}
+                          </span>
                         </div>
                       )}
                     </TableCell>
@@ -175,7 +185,16 @@ export function ProductTable({ pcrs, profiles }: Props) {
         <PCRModal open={modalOpen} onClose={() => setModalOpen(false)} profiles={profiles} />
       </Card>
 
-      <Dialog open={!!completingId} onOpenChange={() => setCompletingId(null)}>
+      <Dialog open={!!completingId} onOpenChange={() => {
+        if (completingId) {
+          setOverrides((prev) => {
+            const next = { ...prev }
+            delete next[completingId]
+            return next
+          })
+        }
+        setCompletingId(null)
+      }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Who completed this?</DialogTitle>
@@ -194,7 +213,16 @@ export function ProductTable({ pcrs, profiles }: Props) {
               </SelectContent>
             </Select>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setCompletingId(null)}>
+              <Button variant="outline" onClick={() => {
+                if (completingId) {
+                  setOverrides((prev) => {
+                    const next = { ...prev }
+                    delete next[completingId]
+                    return next
+                  })
+                }
+                setCompletingId(null)
+              }}>
                 Cancel
               </Button>
               <Button disabled={!completedBy || saving} onClick={handleConfirmComplete}>
