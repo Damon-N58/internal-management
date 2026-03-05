@@ -176,6 +176,7 @@ export type Database = {
           status: string
           deadline: string | null
           completed_at: string | null
+          completed_by: string | null
           created_at: string
         }
         Insert: {
@@ -189,6 +190,7 @@ export type Database = {
           status: string
           deadline?: string | null
           completed_at?: string | null
+          completed_by?: string | null
           created_at?: string
         }
         Update: Partial<Database["public"]["Tables"]["product_change_request"]["Insert"]>

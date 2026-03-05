@@ -3,9 +3,10 @@ import { supabase } from "@/lib/supabase"
 import { differenceInDays } from "date-fns"
 
 export async function GET() {
-  const [{ data: profiles }, { data: tickets }] = await Promise.all([
+  const [{ data: profiles }, { data: tickets }, { data: pcrs }] = await Promise.all([
     supabase.from("profile").select("id, full_name, email"),
     supabase.from("ticket").select("id, status, assigned_to, estimated_hours, actual_hours, closed_at"),
+    supabase.from("product_change_request").select("id, status, completed_by, completed_at"),
   ])
 
   if (!profiles || !tickets) {
@@ -13,6 +14,8 @@ export async function GET() {
   }
 
   const employees = profiles.map((p) => {
+    const name = p.full_name || p.email
+
     const myTickets = tickets.filter((t) => t.assigned_to === p.id)
     const closed = myTickets.filter((t) => t.status === "Closed")
     const hoursLogged = closed.reduce((s, t) => s + (t.actual_hours ?? 0), 0)
@@ -25,13 +28,18 @@ export async function GET() {
       (t) => t.closed_at && differenceInDays(new Date(), new Date(t.closed_at)) <= 7
     )
 
+    const pcrsClosed = (pcrs ?? []).filter(
+      (pr) => pr.status === "Completed" && pr.completed_by === name
+    ).length
+
     return {
       id: p.id,
-      name: p.full_name || p.email,
+      name,
       ticketsClosed: closed.length,
       hoursLogged: Math.round(hoursLogged * 10) / 10,
       efficiencyScore: Math.round(efficiency),
       streak: recentClosed.length,
+      pcrsClosed,
     }
   })
 

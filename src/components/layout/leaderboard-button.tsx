@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { Trophy, Flame, Clock, CheckSquare, TrendingUp, X } from "lucide-react"
+import { Trophy, Flame, Clock, CheckSquare, TrendingUp, X, PackageCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type EmployeeScore = {
@@ -11,11 +11,12 @@ type EmployeeScore = {
   hoursLogged: number
   efficiencyScore: number
   streak: number
+  pcrsClosed: number
 }
 
 function getTotalScore(e: EmployeeScore) {
   const base = e.ticketsClosed * 10
-  return Math.round(base * (e.efficiencyScore / 100)) + e.streak * 3
+  return Math.round(base * (e.efficiencyScore / 100)) + e.streak * 3 + e.pcrsClosed * 5
 }
 
 function getInitials(name: string) {
@@ -176,6 +177,12 @@ export function LeaderboardButton() {
                                 <TrendingUp className="h-3 w-3 text-violet-400" />
                                 {emp.efficiencyScore}%
                               </span>
+                              {emp.pcrsClosed > 0 && (
+                                <span className="flex items-center gap-1 text-purple-400 font-medium">
+                                  <PackageCheck className="h-3 w-3" />
+                                  {emp.pcrsClosed}
+                                </span>
+                              )}
                               {emp.streak > 0 && (
                                 <span className="flex items-center gap-1 text-orange-400 font-medium">
                                   <Flame className="h-3 w-3" />
@@ -195,7 +202,7 @@ export function LeaderboardButton() {
             {/* Footer */}
             <div className="border-t border-slate-100 px-4 py-2.5">
               <p className="text-[10px] text-slate-400">
-                pts = closed×10 + efficiency×5 + streak×3
+                pts = tickets×10 × efficiency% + pcrs×5 + streak×3
               </p>
             </div>
           </div>
