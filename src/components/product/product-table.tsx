@@ -72,7 +72,13 @@ export function ProductTable({ pcrs, profiles }: Props) {
       return
     }
     setOverrides((prev) => ({ ...prev, [pcrId]: { status: newStatus } }))
-    await updatePCRStatus(pcrId, newStatus)
+    const result = await updatePCRStatus(pcrId, newStatus)
+    if (result.error) {
+      console.error("PCR status update failed:", result.error)
+      setOverrides((prev) => { const n = { ...prev }; delete n[pcrId]; return n })
+      alert(`Failed to update status: ${result.error}`)
+      return
+    }
     router.refresh()
   }
 
@@ -80,8 +86,14 @@ export function ProductTable({ pcrs, profiles }: Props) {
     if (!completingId || !completedBy) return
     setSaving(true)
     setOverrides((prev) => ({ ...prev, [completingId]: { status: "Completed", completed_by: completedBy } }))
-    await updatePCRStatus(completingId, "Completed", completedBy)
+    const result = await updatePCRStatus(completingId, "Completed", completedBy)
     setSaving(false)
+    if (result.error) {
+      console.error("PCR complete failed:", result.error)
+      setOverrides((prev) => { const n = { ...prev }; delete n[completingId]; return n })
+      alert(`Failed to save: ${result.error}`)
+      return
+    }
     setCompletingId(null)
     setCompletedBy("")
     router.refresh()

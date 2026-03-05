@@ -40,8 +40,8 @@ export async function createPCR(data: CreatePCRData): Promise<{ error?: string }
   return {}
 }
 
-export async function updatePCRStatus(pcrId: string, status: string, completedBy?: string) {
-  await supabase
+export async function updatePCRStatus(pcrId: string, status: string, completedBy?: string): Promise<{ error?: string }> {
+  const { error } = await supabase
     .from("product_change_request")
     .update({
       status,
@@ -50,5 +50,8 @@ export async function updatePCRStatus(pcrId: string, status: string, completedBy
     })
     .eq("id", pcrId)
 
+  if (error) return { error: error.message }
+
   revalidatePath("/product")
+  return {}
 }
