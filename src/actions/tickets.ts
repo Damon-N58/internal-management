@@ -39,9 +39,7 @@ export async function createTicket(
 
   if (error) return { error: error.message }
 
-  if (companyId !== "_general") {
-    await writeActivityLog(companyId, `Ticket created: "${data.title}"`, "Automated")
-  }
+  await writeActivityLog(companyId, `Ticket created: "${data.title}"`, "Automated")
   revalidatePath(`/clients/${companyId}`)
   revalidatePath("/tickets")
   return {}
@@ -65,13 +63,11 @@ export async function updateTicketStatus(ticketId: string, companyId: string, st
 
   if (error) return { error: error.message }
 
-  if (companyId !== "_general") {
-    await writeActivityLog(
-      companyId,
-      `Ticket "${ticket?.title}" status changed to ${status}`,
-      "Automated"
-    )
-  }
+  await writeActivityLog(
+    companyId,
+    `Ticket "${ticket?.title}" status changed to ${status}`,
+    "Automated"
+  )
   revalidatePath(`/clients/${companyId}`)
   revalidatePath("/tickets")
   return {}

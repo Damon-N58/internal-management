@@ -185,10 +185,7 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
     router.refresh()
   }
 
-  const companiesWithGeneral: CompanyOption[] = [
-    { id: "_general", name: "General (Internal)" },
-    ...companies.filter((c) => c.id !== "_general"),
-  ]
+  const companiesWithGeneral = companies
 
   return (
     <>
