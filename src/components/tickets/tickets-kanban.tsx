@@ -94,6 +94,7 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
   const [newDueDate, setNewDueDate] = useState("")
   const [newEstimatedHours, setNewEstimatedHours] = useState("")
   const [creating, setCreating] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<{ title?: string; company?: string }>({})
 
   const assigneeName = (userId: string | null) => {
     if (!userId) return null
@@ -102,7 +103,11 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
   }
 
   const handleCreate = async () => {
-    if (!newTitle.trim() || !newCompany) return
+    const errors: { title?: string; company?: string } = {}
+    if (!newTitle.trim()) errors.title = "Title is required"
+    if (!newCompany) errors.company = "Please select a client"
+    if (Object.keys(errors).length > 0) { setFieldErrors(errors); return }
+    setFieldErrors({})
     setCreating(true)
     const result = await createTicket(newCompany, {
       title: newTitle.trim(),
@@ -118,6 +123,7 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
       return
     }
     setCreateOpen(false)
+    setFieldErrors({})
     setNewTitle("")
     setNewDescription("")
     setNewCompany("")
@@ -290,7 +296,7 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
       </div>
 
       {/* Create Ticket Dialog */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+      <Dialog open={createOpen} onOpenChange={(open) => { setCreateOpen(open); if (!open) setFieldErrors({}) }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Create Ticket</DialogTitle>
@@ -300,9 +306,11 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
               <Label>Title</Label>
               <Input
                 value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
+                onChange={(e) => { setNewTitle(e.target.value); if (e.target.value.trim()) setFieldErrors((p) => ({ ...p, title: undefined })) }}
                 placeholder="What needs to be done?"
+                className={fieldErrors.title ? "border-red-500 focus-visible:ring-red-500" : ""}
               />
+              {fieldErrors.title && <p className="text-xs text-red-600">{fieldErrors.title}</p>}
             </div>
             <div className="space-y-1.5">
               <Label>Description</Label>
@@ -316,8 +324,8 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>Client</Label>
-                <Select value={newCompany} onValueChange={setNewCompany}>
-                  <SelectTrigger>
+                <Select value={newCompany} onValueChange={(v) => { setNewCompany(v); setFieldErrors((p) => ({ ...p, company: undefined })) }}>
+                  <SelectTrigger className={fieldErrors.company ? "border-red-500 ring-red-500" : ""}>
                     <SelectValue placeholder="Select client" />
                   </SelectTrigger>
                   <SelectContent>
@@ -326,6 +334,7 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
                     ))}
                   </SelectContent>
                 </Select>
+                {fieldErrors.company && <p className="text-xs text-red-600">{fieldErrors.company}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label>Priority</Label>
@@ -385,7 +394,7 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
               </Button>
               <Button
                 onClick={handleCreate}
-                disabled={creating || !newTitle.trim() || !newCompany}
+                disabled={creating}
               >
                 {creating ? "Creating..." : "Create Ticket"}
               </Button>
