@@ -26,7 +26,8 @@ const defaultForm = {
   role: "Member" as UserRole,
 }
 
-export function TeamTab({ profiles, currentUserId, isAdmin: admin }: Props) {
+export function TeamTab({ profiles: initialProfiles, currentUserId, isAdmin: admin }: Props) {
+  const [profiles] = useState(initialProfiles)
   const [form, setForm] = useState(defaultForm)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")

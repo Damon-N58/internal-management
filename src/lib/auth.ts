@@ -14,19 +14,57 @@ export async function getCurrentUser(): Promise<Profile | null> {
 
   if (profile) return profile
 
-  // Auto-create profile on first access
+  const email = user.emailAddresses[0]?.emailAddress ?? ""
   const fullName =
-    [user.firstName, user.lastName].filter(Boolean).join(" ") ||
-    user.emailAddresses[0]?.emailAddress ||
-    ""
+    [user.firstName, user.lastName].filter(Boolean).join(" ") || email || ""
+  const role = ((user.publicMetadata?.role as UserRole) || "Member")
 
+  // Check for a pre-seeded placeholder profile matched by email
+  if (email) {
+    const { data: seeded } = await supabase
+      .from("profile")
+      .select()
+      .eq("email", email)
+      .neq("id", user.id)
+      .maybeSingle()
+
+    if (seeded) {
+      // Insert the real profile with the Clerk user ID
+      await supabase.from("profile").insert({
+        id: user.id,
+        email,
+        full_name: seeded.full_name || fullName,
+        role: seeded.role || role,
+        created_at: new Date().toISOString(),
+      })
+
+      // Re-key any company assignments from the placeholder ID to the real Clerk ID
+      await supabase
+        .from("user_company_assignment")
+        .update({ user_id: user.id })
+        .eq("user_id", seeded.id)
+
+      // Delete the placeholder profile (assignments now point to real ID)
+      await supabase.from("profile").delete().eq("id", seeded.id)
+
+      const { data: merged } = await supabase
+        .from("profile")
+        .select()
+        .eq("id", user.id)
+        .single()
+
+      return merged ?? null
+    }
+  }
+
+  // Auto-create profile on first access
   const { data: newProfile } = await supabase
     .from("profile")
     .insert({
       id: user.id,
-      email: user.emailAddresses[0]?.emailAddress ?? "",
+      email,
       full_name: fullName,
-      role: ((user.publicMetadata?.role as UserRole) || "Member"),
+      role,
       created_at: new Date().toISOString(),
     })
     .select()

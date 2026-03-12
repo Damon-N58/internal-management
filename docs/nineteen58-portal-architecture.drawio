@@ -1,0 +1,180 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36" version="29.4.0">
+  <diagram id="n58-v2" name="Nineteen58 Portal Overview">
+    <mxGraphModel dx="2702" dy="1807" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="1700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="main_title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=26;fontStyle=1;fontColor=#1a1a2e;" value="Nineteen58 : Internal Operations Portal" vertex="1">
+          <mxGeometry height="45" width="1200" x="500" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="main_sub" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;fontColor=#555555;" value="A centralised internal tool for managing clients, AI engineer time, product requests, blockers, and knowledge. Built on Next.js, Prisma, and Supabase." vertex="1">
+          <mxGeometry height="24" width="1200" x="500" y="76" as="geometry" />
+        </mxCell>
+        <mxCell id="sec_a_label" parent="1" style="text;html=1;strokeColor=#444444;fillColor=#eeeeee;align=center;verticalAlign=middle;rounded=4;fontSize=10;fontStyle=1;fontColor=#333333;" value="WHAT THE PORTAL DOES" vertex="1">
+          <mxGeometry height="28" width="180" x="60" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_clients" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Client Management&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;Track every client account in one place. View health score, contract status, assigned team members, objectives, and a full history of interactions." vertex="1">
+          <mxGeometry height="130" width="280" x="60" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_tickets" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Ticket &amp;amp; Time Tracking&lt;/b&gt;&lt;br&gt;&lt;br&gt;Log support tickets per client. Track which AI Engineer is assigned, how long tasks take, and the current status; giving full visibility into team workload." vertex="1">
+          <mxGeometry height="130" width="280" x="380" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_blockers" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Blocker Tracking&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;Formally raise and manage blockers per client. Categorise as Internal, External, Technical, or Commercial. Auto-escalate when unresolved for 5+ days." vertex="1">
+          <mxGeometry height="130" width="280" x="700" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_pcr" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Product Change Requests&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;Submit and manage feature requests or bug reports. Each item has a priority (1–5), an internal owner, and tracks progress from Requested through to Completed." vertex="1">
+          <mxGeometry height="130" width="280" x="1020" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_health" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Automated Health Scoring&lt;/b&gt;&lt;br&gt;&lt;br&gt;Each client gets a score of 1 – 5 automatically calculated from open blockers, recent activity, open product requests, and AI conversation volume." vertex="1">
+          <mxGeometry height="130" width="280" x="1340" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="feat_kb" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Knowledge Base&lt;/b&gt;&lt;br&gt;&lt;br&gt;Store docs, links, and notes per client. Acts as a shared reference for the team. No more chasing down credentials, runbooks, or past decisions." vertex="1">
+          <mxGeometry height="130" width="280" x="1660" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="sec_b_label" parent="1" style="text;html=1;strokeColor=#444444;fillColor=#eeeeee;align=center;verticalAlign=middle;rounded=4;fontSize=10;fontStyle=1;fontColor=#333333;" value="KEY PAGES &amp; USER FLOWS" vertex="1">
+          <mxGeometry height="28" width="180" x="60" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="page_dash" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Dashboard&lt;/b&gt;&lt;br/&gt;─────────────────────&lt;br/&gt;The home screen. Shows:&lt;br/&gt;• Active client count&lt;br/&gt;• Current POC count&lt;br/&gt;• Deadlines in the next 7 days&lt;br/&gt;• Total open blockers&lt;br/&gt;• Attention cards (clients needing action)&lt;br/&gt;• Full client table with role-based views&lt;br/&gt;&lt;br/&gt;Notifications are auto-generated on load." vertex="1">
+          <mxGeometry height="220" width="300" x="60" y="385" as="geometry" />
+        </mxCell>
+        <mxCell id="page_client" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Client Detail Page&lt;/b&gt;&lt;br&gt;─────────────────────&lt;br&gt;Opens for each client. Contains 6 tabs:&lt;br&gt;&lt;br&gt;1. &lt;b&gt;Overview&lt;/b&gt;&amp;nbsp;- objectives, active blockers, deadlines, handoff report generator&lt;br&gt;2. &lt;b&gt;Blockers&lt;/b&gt;&amp;nbsp;- raise/resolve blockers, see escalation level&lt;br&gt;3. &lt;b&gt;Tickets&lt;/b&gt;&amp;nbsp;- log support tickets, track engineer time&lt;br&gt;4. &lt;b&gt;Activity&lt;/b&gt;&amp;nbsp;- full chronological log of all interactions&lt;br&gt;5. &lt;b&gt;Technical Vault&lt;/b&gt;&amp;nbsp;- securely stored credentials (hidden by default)&lt;br&gt;6. &lt;b&gt;Knowledge Base&lt;/b&gt;&amp;nbsp;- docs, links, notes" vertex="1">
+          <mxGeometry height="220" width="340" x="420" y="385" as="geometry" />
+        </mxCell>
+        <mxCell id="page_product" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Product Roadmap&lt;/b&gt;&lt;br/&gt;─────────────────────&lt;br/&gt;Central view of all product change requests across all clients.&lt;br/&gt;&lt;br/&gt;• Filter by status (Requested / In Progress / Completed)&lt;br/&gt;• See priority, description, who requested it, who it is assigned to, and deadline&lt;br/&gt;• Submit new feature requests or bug reports via a form modal" vertex="1">
+          <mxGeometry height="220" width="310" x="820" y="385" as="geometry" />
+        </mxCell>
+        <mxCell id="page_notif" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Notifications (Bell Icon)&lt;/b&gt;&lt;br/&gt;─────────────────────&lt;br/&gt;Auto-generated alerts surfaced in the top nav bar. Triggered by:&lt;br/&gt;&lt;br/&gt;• Contract expiring within 60 days&lt;br/&gt;• Client health score drops to 1 or 2&lt;br/&gt;• No activity logged in 30+ days&lt;br/&gt;• A blocker goes 5+ days without an update&lt;br/&gt;&lt;br/&gt;Each notification can be dismissed individually or all at once." vertex="1">
+          <mxGeometry height="220" width="310" x="1190" y="385" as="geometry" />
+        </mxCell>
+        <mxCell id="page_handoff" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Handoff Report Generator&lt;/b&gt;&lt;br/&gt;─────────────────────&lt;br/&gt;Available on each client&#39;s Overview tab.&lt;br/&gt;&lt;br/&gt;Pulls together in one click:&lt;br/&gt;• Current objectives&lt;br/&gt;• Open blockers&lt;br/&gt;• Upcoming deadlines&lt;br/&gt;• Recent activity log&lt;br/&gt;• Technical vault summary&lt;br/&gt;&lt;br/&gt;Formatted as a copy-ready Markdown report." vertex="1">
+          <mxGeometry height="220" width="300" x="1560" y="385" as="geometry" />
+        </mxCell>
+        <mxCell id="sec_c_label" parent="1" style="text;html=1;strokeColor=#82b366;fillColor=#d5e8d4;align=center;verticalAlign=middle;rounded=4;fontSize=10;fontStyle=1;fontColor=#333333;" value="TICKETING &amp; AI ENGINEER TIME TRACKING (DETAIL)" vertex="1">
+          <mxGeometry height="28" width="320" x="60" y="660" as="geometry" />
+        </mxCell>
+        <mxCell id="ticket_lifecycle" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Ticket Lifecycle&lt;/b&gt;&lt;br/&gt;─────────────────────&lt;br/&gt;Every ticket belongs to a specific client and moves through a defined status flow:&lt;br/&gt;&lt;br/&gt;&lt;b&gt;Open&lt;/b&gt; → work not yet started&lt;br/&gt;&lt;b&gt;Blocked&lt;/b&gt; → waiting on something external&lt;br/&gt;&lt;b&gt;Closed&lt;/b&gt; → resolved and completed&lt;br/&gt;&lt;br/&gt;Every status change is automatically written to that client&#39;s Activity Log, creating a full audit trail." vertex="1">
+          <mxGeometry height="220" width="310" x="60" y="705" as="geometry" />
+        </mxCell>
+        <mxCell id="ticket_engineer" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;AI Engineer Time Visibility&lt;/b&gt;&lt;br/&gt;─────────────────────&lt;br/&gt;Each ticket records:&lt;br/&gt;&lt;br/&gt;• &lt;b&gt;Who raised it&lt;/b&gt; (the client / internal requester)&lt;br/&gt;• &lt;b&gt;Which engineer it is assigned to&lt;/b&gt;&lt;br/&gt;• &lt;b&gt;Current status&lt;/b&gt; at all times&lt;br/&gt;• &lt;b&gt;When it was created&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;This allows managers to see at a glance which engineers are overloaded, which clients have the most open tickets, and where effort is being spent." vertex="1">
+          <mxGeometry height="220" width="320" x="430" y="705" as="geometry" />
+        </mxCell>
+        <mxCell id="ticket_audit" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Automatic Audit Trail&lt;/b&gt;&lt;br&gt;─────────────────────&lt;br&gt;Every action taken in the portal is automatically logged against the relevant client:&lt;br&gt;&lt;br&gt;• Ticket created / status changed&lt;br&gt;• Blocker raised / resolved&lt;br&gt;• Activity note added&lt;br&gt;• AI conversation volume received&lt;br&gt;&lt;br&gt;This gives a complete, timestamped record of all work done for every client, visible on the Activity tab." vertex="1">
+          <mxGeometry height="220" width="310" x="810" y="705" as="geometry" />
+        </mxCell>
+        <mxCell id="ticket_usage" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;AI Usage Signal Ingestion&lt;/b&gt;&lt;br/&gt;─────────────────────&lt;br/&gt;The portal receives automated signals from the AI platform showing how much a client is using the product (measured in conversation volume).&lt;br/&gt;&lt;br/&gt;These signals:&lt;br/&gt;• Update the client&#39;s usage metric&lt;br/&gt;• Feed into the health score calculation&lt;br/&gt;• Are logged in the activity trail&lt;br/&gt;&lt;br/&gt;Low usage = lower health score = earlier alert." vertex="1">
+          <mxGeometry height="220" width="310" x="1180" y="705" as="geometry" />
+        </mxCell>
+        <mxCell id="sec_d_label" parent="1" style="text;html=1;strokeColor=#b85450;fillColor=#f8cecc;align=center;verticalAlign=middle;rounded=4;fontSize=10;fontStyle=1;fontColor=#333333;" value="AUTOMATED HEALTH SCORING — HOW IT WORKS" vertex="1">
+          <mxGeometry height="28" width="320" x="60" y="980" as="geometry" />
+        </mxCell>
+        <mxCell id="hs_blockers" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Input 1: Open Blockers&lt;/b&gt;&lt;br/&gt;─────────────────────&lt;br/&gt;More open blockers = lower score.&lt;br/&gt;&lt;br/&gt;0 blockers → score contribution: 5&lt;br/&gt;1 blocker → 4&lt;br/&gt;2 blockers → 3&lt;br/&gt;3 blockers → 2&lt;br/&gt;4+ blockers → 1 (minimum)" vertex="1">
+          <mxGeometry height="170" width="250" x="60" y="1025" as="geometry" />
+        </mxCell>
+        <mxCell id="hs_activity" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Input 2: Last Activity&lt;/b&gt;&lt;br/&gt;─────────────────────&lt;br/&gt;How recently was the client interacted with?&lt;br/&gt;&lt;br/&gt;Within 7 days → score contribution: 5&lt;br/&gt;Within 30 days → 3&lt;br/&gt;Over 30 days / none → 1" vertex="1">
+          <mxGeometry height="170" width="250" x="340" y="1025" as="geometry" />
+        </mxCell>
+        <mxCell id="hs_pcr" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Input 3: Open Product Requests&lt;/b&gt;&lt;br/&gt;─────────────────────&lt;br/&gt;Unresolved product issues reduce the score.&lt;br/&gt;&lt;br/&gt;Each open PCR reduces the score contribution by 0.5, down to a minimum of 1." vertex="1">
+          <mxGeometry height="170" width="260" x="620" y="1025" as="geometry" />
+        </mxCell>
+        <mxCell id="hs_usage" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Input 4: AI Conversation Volume&lt;/b&gt;&lt;br/&gt;─────────────────────&lt;br/&gt;How actively is the client using the product?&lt;br/&gt;&lt;br/&gt;0 conversations → score contribution: 1&lt;br/&gt;1–9 → 2&lt;br/&gt;10–49 → 3&lt;br/&gt;50–199 → 4&lt;br/&gt;200+ → 5" vertex="1">
+          <mxGeometry height="170" width="260" x="910" y="1025" as="geometry" />
+        </mxCell>
+        <mxCell id="hs_output" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Final Health Score (1–5)&lt;/b&gt;&lt;br/&gt;─────────────────────&lt;br/&gt;The four inputs are averaged into a final score between 1 and 5.&lt;br/&gt;&lt;br/&gt;&lt;b&gt;5 (Green)&lt;/b&gt; — Client is healthy and engaged&lt;br/&gt;&lt;b&gt;3–4 (Yellow)&lt;/b&gt; — Some attention needed&lt;br/&gt;&lt;b&gt;1–2 (Red)&lt;/b&gt; — Urgent action required&lt;br/&gt;&lt;br/&gt;Every recalculation is logged to history so the team can track trends over time." vertex="1">
+          <mxGeometry height="170" width="300" x="460" y="1262" as="geometry" />
+        </mxCell>
+        <mxCell id="hs_arr1" edge="1" parent="1" source="hs_blockers" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#b85450;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="hs_output">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="hs_arr2" edge="1" parent="1" source="hs_activity" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#b85450;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="hs_output">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="260" y="1295" as="sourcePoint" />
+            <mxPoint x="545" y="1480" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hs_arr3" edge="1" parent="1" source="hs_pcr" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#b85450;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="hs_output">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="610" y="1300" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hs_arr4" edge="1" parent="1" source="hs_usage" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#b85450;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="hs_output">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="sec_e_label" parent="1" style="text;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;align=center;verticalAlign=middle;rounded=4;fontSize=10;fontStyle=1;fontColor=#333333;" value="DATABASE — TABLES &amp; WHAT EACH ONE STORES" vertex="1">
+          <mxGeometry height="28" width="320" x="55" y="1612" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_company" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Company&lt;/b&gt;&lt;br&gt;&lt;i&gt;One row per client&lt;/i&gt;&lt;br&gt;─────────────────────&lt;br&gt;Name, status (POC / Active / Churn Risk)&lt;br&gt;Health score (1–5)&lt;br&gt;Priority ranking&lt;br&gt;Primary CSM &amp;amp; implementation leads&lt;br&gt;Contract end date&lt;br&gt;Current objectives, blockers &amp;amp; future work (text)&lt;br&gt;Last activity timestamp&lt;br&gt;AI conversation volume (usage metric)&lt;br&gt;&lt;br&gt;&lt;i&gt;This is the central record. All other tables link to it.&lt;/i&gt;" vertex="1">
+          <mxGeometry height="230" width="300" x="60" y="1923" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_ticket" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Ticket&lt;/b&gt;&lt;br/&gt;&lt;i&gt;One row per support ticket&lt;/i&gt;&lt;br/&gt;─────────────────────&lt;br/&gt;Title of the issue&lt;br/&gt;Status: Open / Blocked / Closed&lt;br/&gt;Which client it belongs to&lt;br/&gt;Date created&lt;br/&gt;&lt;br/&gt;&lt;i&gt;Used to track all support work and AI engineer task load per client.&lt;/i&gt;" vertex="1">
+          <mxGeometry height="200" width="280" x="430" y="1690" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_blocker" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Blocker&lt;/b&gt;&lt;br/&gt;&lt;i&gt;One row per raised blocker&lt;/i&gt;&lt;br/&gt;─────────────────────&lt;br/&gt;Title &amp;amp; description&lt;br/&gt;Category: Internal / External / Technical / Commercial&lt;br/&gt;Status: Open / Resolved&lt;br/&gt;Owner (who is responsible)&lt;br/&gt;Escalation level (auto-increments after 5 days)&lt;br/&gt;Resolution deadline&lt;br/&gt;Resolved date&lt;br/&gt;&lt;br/&gt;&lt;i&gt;Directly feeds into the health score calculation.&lt;/i&gt;" vertex="1">
+          <mxGeometry height="230" width="300" x="1120" y="1798" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_activity" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Activity Log&lt;/b&gt;&lt;br/&gt;&lt;i&gt;One row per logged event&lt;/i&gt;&lt;br/&gt;─────────────────────&lt;br/&gt;Content (what happened)&lt;br/&gt;Type: Email / Note / Automated&lt;br/&gt;Which client it belongs to&lt;br/&gt;Timestamp&lt;br/&gt;&lt;br/&gt;&lt;i&gt;Auto-written whenever a ticket is created/updated, a blocker is raised/resolved, or a note is manually added. Provides the full interaction history.&lt;/i&gt;" vertex="1">
+          <mxGeometry height="220" width="300" x="780" y="1680" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_pcr" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Product Change Request&lt;/b&gt;&lt;br/&gt;&lt;i&gt;One row per PCR (not linked to one client)&lt;/i&gt;&lt;br/&gt;─────────────────────&lt;br/&gt;Issue type: Feature / Bug&lt;br/&gt;Description &amp;amp; location (UI or Functionality)&lt;br/&gt;Priority: 1 (critical) to 5 (low)&lt;br/&gt;Requested by / Assigned to&lt;br/&gt;Status: Requested / In Progress / Completed&lt;br/&gt;Deadline &amp;amp; completion date" vertex="1">
+          <mxGeometry height="210" width="300" x="1590" y="1943" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_vault" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Technical Vault&lt;/b&gt;&lt;br/&gt;&lt;i&gt;One row per client (1-to-1)&lt;/i&gt;&lt;br/&gt;─────────────────────&lt;br/&gt;FTP credentials&lt;br/&gt;API keys&lt;br/&gt;SSH configuration&lt;br/&gt;Other secrets / sensitive info&lt;br/&gt;&lt;br/&gt;&lt;i&gt;All fields are hidden by default in the UI. Reveal requires a deliberate click. Secured with Row Level Security (RLS) in the database.&lt;/i&gt;" vertex="1">
+          <mxGeometry height="210" width="290" x="65" y="2228" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_kb" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Knowledge Base Entry&lt;/b&gt;&lt;br/&gt;&lt;i&gt;One row per entry&lt;/i&gt;&lt;br/&gt;─────────────────────&lt;br/&gt;Title &amp;amp; content&lt;br/&gt;URL (for link-type entries)&lt;br/&gt;Type: Doc / Link / Note&lt;br/&gt;Which client it belongs to&lt;br/&gt;Date created&lt;br/&gt;&lt;br/&gt;&lt;i&gt;Team members can add reference material that lives permanently against the client record.&lt;/i&gt;" vertex="1">
+          <mxGeometry height="210" width="290" x="380" y="2228" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_deadline" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Deadline&lt;/b&gt;&lt;br/&gt;&lt;i&gt;One row per deadline&lt;/i&gt;&lt;br/&gt;─────────────────────&lt;br/&gt;Description (what is due)&lt;br/&gt;Due date&lt;br/&gt;Which client it belongs to&lt;br/&gt;&lt;br/&gt;&lt;i&gt;Deadlines within 7 days appear as a stat on the Dashboard. Upcoming deadlines are surfaced on the client Overview tab.&lt;/i&gt;" vertex="1">
+          <mxGeometry height="200" width="280" x="710" y="2238" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_notif" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Notification&lt;/b&gt;&lt;br/&gt;&lt;i&gt;One row per alert&lt;/i&gt;&lt;br/&gt;─────────────────────&lt;br/&gt;Type (Contract Expiry / Health Drop / No Activity / Stale Blocker)&lt;br/&gt;Message text&lt;br/&gt;Priority (1 = urgent, 2 = standard)&lt;br/&gt;Read / unread status&lt;br/&gt;Related client (optional)&lt;br/&gt;&lt;br/&gt;&lt;i&gt;Deduped so only one unread alert per type per client exists at any time.&lt;/i&gt;" vertex="1">
+          <mxGeometry height="210" width="300" x="1020" y="2238" as="geometry" />
+        </mxCell>
+        <mxCell id="tbl_hlog" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;arcSize=8;verticalAlign=top;" value="&lt;b&gt;Health Score Log&lt;/b&gt;&lt;br/&gt;&lt;i&gt;One row per recalculation event&lt;/i&gt;&lt;br/&gt;─────────────────────&lt;br/&gt;Score at the time (1–5)&lt;br/&gt;Full breakdown of all four input scores (stored as JSON)&lt;br/&gt;Which client it belongs to&lt;br/&gt;Timestamp of calculation&lt;br/&gt;&lt;br/&gt;&lt;i&gt;Allows the team to track how a client&#39;s health has changed over time.&lt;/i&gt;" vertex="1">
+          <mxGeometry height="210" width="300" x="1350" y="2238" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_co_tkt" edge="1" parent="1" source="tbl_company" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#82b366;strokeWidth=1;fontSize=9;dashed=0;" target="tbl_ticket" value="1 : many">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_co_blk" edge="1" parent="1" source="tbl_company" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#9673a6;strokeWidth=1;fontSize=9;" target="tbl_blocker" value="1 : many">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_co_act" edge="1" parent="1" source="tbl_company" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#82b366;strokeWidth=1;fontSize=9;" target="tbl_activity" value="1 : many">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_co_vlt" edge="1" parent="1" source="tbl_company" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d6b656;strokeWidth=1;fontSize=9;" target="tbl_vault" value="1 : 1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_co_kb" edge="1" parent="1" source="tbl_company" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d6b656;strokeWidth=1;fontSize=9;" target="tbl_kb" value="1 : many">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_co_dl" edge="1" parent="1" source="tbl_company" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#9673a6;strokeWidth=1;fontSize=9;" target="tbl_deadline" value="1 : many">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_co_ntf" edge="1" parent="1" source="tbl_company" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#6c8ebf;strokeWidth=1;fontSize=9;" target="tbl_notif" value="1 : many">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_co_hlog" edge="1" parent="1" source="tbl_company" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#b85450;strokeWidth=1;fontSize=9;" target="tbl_hlog" value="1 : many">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;" value="Colour Key" vertex="1">
+          <mxGeometry height="24" width="120" x="2000" y="15.5" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" value="Client &amp; navigation" vertex="1">
+          <mxGeometry height="28" width="200" x="2000" y="39.5" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" value="Tickets, activity &amp; audit" vertex="1">
+          <mxGeometry height="28" width="200" x="2000" y="73" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" value="Blockers &amp; deadlines" vertex="1">
+          <mxGeometry height="28" width="200" x="2000" y="106" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" value="Health scoring" vertex="1">
+          <mxGeometry height="28" width="200" x="2000" y="139" as="geometry" />
+        </mxCell>
+        <mxCell id="leg5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="Credentials, KB &amp; product" vertex="1">
+          <mxGeometry height="28" width="200" x="2000" y="172" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

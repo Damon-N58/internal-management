@@ -27,7 +27,7 @@ export default async function ClientDetailPage({ params }: Props) {
 
   escalateStaleBlockers().catch(() => {})
 
-  const [{ data: company }, { data: teamMembers }] = await Promise.all([
+  const [{ data: company }, { data: teamMembers }, { data: agentConfigs }] = await Promise.all([
     supabase
       .from("company")
       .select(
@@ -39,6 +39,12 @@ export default async function ClientDetailPage({ params }: Props) {
       .from("user_company_assignment")
       .select("user_id, profile:user_id(id, full_name, email)")
       .eq("company_id", id),
+    supabase
+      .from("agent_config")
+      .select()
+      .eq("company_id", id)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true }),
   ])
 
   if (!company) notFound()
@@ -56,6 +62,7 @@ export default async function ClientDetailPage({ params }: Props) {
     deadline: (company.deadline ?? []) as unknown as FullCompany["deadline"],
     blocker: (company.blocker ?? []) as unknown as FullCompany["blocker"],
     knowledge_base_entry: (company.knowledge_base_entry ?? []) as unknown as FullCompany["knowledge_base_entry"],
+    agent_config: (agentConfigs ?? []) as unknown as FullCompany["agent_config"],
   } as FullCompany
 
   return (

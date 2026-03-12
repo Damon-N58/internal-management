@@ -1,5 +1,6 @@
 import type { Database } from "./database"
 
+export type AgentConfig = Database["public"]["Tables"]["agent_config"]["Row"]
 export type Company = Database["public"]["Tables"]["company"]["Row"]
 export type TechnicalVault = Database["public"]["Tables"]["technical_vault"]["Row"]
 export type ActivityLog = Database["public"]["Tables"]["activity_log"]["Row"]
@@ -17,7 +18,7 @@ export type PCRStatus = "Requested" | "In Progress" | "Completed"
 export type PCRIssueType = "Feature" | "Issue"
 export type PCRLocation = "UI" | "Functionality"
 export type ActivityLogType = "Email" | "Note" | "Automated"
-export type HealthScore = 1 | 2 | 3 | 4 | 5
+export type HealthScore = 0 | 1 | 2 | 3 | 4 | 5
 export type BlockerCategory = "Internal" | "External" | "Technical" | "Commercial"
 export type BlockerStatus = "Open" | "Resolved"
 export type KBEntryType = "Doc" | "Link" | "Note"

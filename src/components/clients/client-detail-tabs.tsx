@@ -7,6 +7,7 @@ import { ActivityTab } from "./activity-tab"
 import { TicketsTab } from "./tickets-tab"
 import { BlockersTab } from "./blockers-tab"
 import { KnowledgeBaseTab } from "./knowledge-base-tab"
+import { AgentsTab } from "./agents-tab"
 import type {
   Company,
   TechnicalVault,
@@ -15,6 +16,7 @@ import type {
   Deadline,
   Blocker,
   KnowledgeBaseEntry,
+  AgentConfig,
 } from "@/types"
 
 export type FullCompany = Company & {
@@ -24,6 +26,7 @@ export type FullCompany = Company & {
   deadline: Deadline[]
   blocker: Blocker[]
   knowledge_base_entry: KnowledgeBaseEntry[]
+  agent_config: AgentConfig[]
 }
 
 export type TeamMember = {
@@ -75,6 +78,14 @@ export function ClientDetailTabs({ company, teamMembers = [] }: Props) {
         </TabsTrigger>
         <TabsTrigger value="vault">Technical Vault</TabsTrigger>
         <TabsTrigger value="knowledge">Knowledge Base</TabsTrigger>
+        <TabsTrigger value="agents">
+          AI Agents
+          {company.agent_config.length > 0 && (
+            <span className="ml-1.5 rounded-full bg-slate-200 px-1.5 py-0.5 text-xs">
+              {company.agent_config.length}
+            </span>
+          )}
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="overview" className="mt-6">
@@ -94,6 +105,9 @@ export function ClientDetailTabs({ company, teamMembers = [] }: Props) {
       </TabsContent>
       <TabsContent value="knowledge" className="mt-6">
         <KnowledgeBaseTab entries={company.knowledge_base_entry} companyId={company.id} />
+      </TabsContent>
+      <TabsContent value="agents" className="mt-6">
+        <AgentsTab agents={company.agent_config} companyId={company.id} />
       </TabsContent>
     </Tabs>
   )

@@ -4,13 +4,16 @@ type Props = { score: number }
 
 export function HealthBadge({ score }: Props) {
   const color =
-    score <= 2
+    score === 0
+      ? "bg-slate-100 text-slate-600 border-slate-200"
+      : score <= 2
       ? "bg-red-100 text-red-700 border-red-200"
       : score <= 4
       ? "bg-yellow-100 text-yellow-700 border-yellow-200"
       : "bg-green-100 text-green-700 border-green-200"
 
-  const label = score <= 2 ? "At Risk" : score <= 4 ? "Moderate" : "Healthy"
+  const label =
+    score === 0 ? "Self Service" : score <= 2 ? "At Risk" : score <= 4 ? "Moderate" : "Healthy"
 
   return (
     <span
