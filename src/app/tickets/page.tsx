@@ -12,24 +12,19 @@ export default async function TicketsPage() {
     .order("priority", { ascending: true })
     .order("created_at", { ascending: false })
 
-  let companyQuery = supabase
-    .from("company")
-    .select("id, name")
-    .order("name", { ascending: true })
-
   if (companyIds.length > 0) {
     ticketQuery = ticketQuery.or(
       `company_id.in.(${companyIds.join(",")}),assigned_to.eq.${profile.id}`
     )
-    companyQuery = companyQuery.in("id", companyIds)
   } else {
     ticketQuery = ticketQuery.eq("assigned_to", profile.id)
   }
 
+  // All companies available for ticket creation — not limited to the user's own assignments
   const [{ data: tickets }, { data: profiles }, { data: companies }] = await Promise.all([
     ticketQuery,
     supabase.from("profile").select("id, full_name, email"),
-    companyQuery,
+    supabase.from("company").select("id, name").order("name", { ascending: true }),
   ])
 
   const ticketsWithCompany = (tickets ?? []).map((t) => ({
