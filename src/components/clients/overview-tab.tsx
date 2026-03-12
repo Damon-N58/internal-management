@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { format, addDays, differenceInDays, isBefore } from "date-fns"
+import { format, addDays, differenceInDays, isBefore, formatDistanceToNow } from "date-fns"
 import {
   ExternalLink,
   FolderOpen,
@@ -32,27 +32,45 @@ function getAttentionReasons(company: FullCompany): AttentionReason[] {
   const reasons: AttentionReason[] = []
   const sixtyDaysOut = addDays(new Date(), 60)
 
-  if (company.health_score > 0 && company.health_score <= 2) {
-    reasons.push({ label: `Health score: ${company.health_score}/5`, severity: "critical" })
-  }
-
+  // Blockers
   const openBlockers = company.blocker.filter((b) => b.status === "Open")
   const staleBlockers = openBlockers.filter(
     (b) => differenceInDays(new Date(), new Date(b.updated_at)) > 5
   )
+  if (openBlockers.length >= 3) {
+    reasons.push({ label: `${openBlockers.length} open blockers dragging score down`, severity: "critical" })
+  } else if (openBlockers.length > 0) {
+    reasons.push({ label: `${openBlockers.length} open blocker${openBlockers.length > 1 ? "s" : ""}`, severity: "warning" })
+  }
   if (staleBlockers.length > 0) {
     reasons.push({
-      label: `${staleBlockers.length} stale blocker${staleBlockers.length > 1 ? "s" : ""}`,
-      severity: "warning",
-    })
-  }
-  if (openBlockers.length > 0 && company.health_score <= 3) {
-    reasons.push({
-      label: `${openBlockers.length} open blocker${openBlockers.length > 1 ? "s" : ""}`,
+      label: `${staleBlockers.length} blocker${staleBlockers.length > 1 ? "s" : ""} unresolved for 5+ days`,
       severity: "warning",
     })
   }
 
+  // Activity
+  if (!company.last_activity_at) {
+    reasons.push({ label: "No activity logged yet", severity: "warning" })
+  } else {
+    const daysSince = differenceInDays(new Date(), new Date(company.last_activity_at))
+    if (daysSince > 30) {
+      reasons.push({ label: `No activity in ${daysSince} days`, severity: "critical" })
+    } else if (daysSince > 7) {
+      reasons.push({ label: `Last activity ${daysSince} days ago`, severity: "warning" })
+    }
+  }
+
+  // Conversation volume
+  if (company.conversation_volume !== null && company.conversation_volume !== undefined) {
+    if (company.conversation_volume === 0) {
+      reasons.push({ label: "Zero conversation volume — client may be inactive", severity: "critical" })
+    } else if (company.conversation_volume < 10) {
+      reasons.push({ label: `Low usage: only ${company.conversation_volume} conversations`, severity: "warning" })
+    }
+  }
+
+  // Contract expiry
   if (company.contract_end_date && isBefore(new Date(company.contract_end_date), sixtyDaysOut)) {
     const daysLeft = differenceInDays(new Date(company.contract_end_date), new Date())
     reasons.push({
@@ -141,7 +159,9 @@ export function OverviewTab({ company }: { company: FullCompany }) {
                   : "text-amber-600"
               }`}
             />
-            <h3 className="text-sm font-semibold text-slate-800">Why this account needs attention</h3>
+            <h3 className="text-sm font-semibold text-slate-800">
+              {company.health_score <= 2 ? `Health score ${company.health_score}/5 — factors pulling it down` : "Account flags"}
+            </h3>
           </div>
           <div className="flex flex-wrap gap-2">
             {attentionReasons.map((r, i) => (

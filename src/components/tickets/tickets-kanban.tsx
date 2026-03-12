@@ -136,7 +136,8 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
   const handleConfirmClose = async () => {
     if (!closeDialogTicket) return
     const hours = actualHours ? parseFloat(actualHours) : undefined
-    await updateTicketStatus(closeDialogTicket.id, closeDialogTicket.company_id, "Closed", hours)
+    const result = await updateTicketStatus(closeDialogTicket.id, closeDialogTicket.company_id, "Closed", hours)
+    if (result.error) { toast.error("Failed to close ticket", { description: result.error }); return }
     setCloseDialogTicket(null)
     setDetailTicket(null)
     router.refresh()
@@ -147,7 +148,8 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
       promptCloseTicket(ticket)
       return
     }
-    await updateTicketStatus(ticket.id, ticket.company_id, status)
+    const result = await updateTicketStatus(ticket.id, ticket.company_id, status)
+    if (result.error) { toast.error("Failed to update ticket", { description: result.error }); return }
     setDetailTicket(null)
     router.refresh()
   }
@@ -164,16 +166,18 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
       promptCloseTicket(ticket)
       return
     }
-    await updateTicketStatus(ticket.id, ticket.company_id, status)
+    const result = await updateTicketStatus(ticket.id, ticket.company_id, status)
+    if (result.error) { toast.error("Failed to update ticket", { description: result.error }); return }
     router.refresh()
   }
 
   const handleAddComment = async (ticketId: string, companyId: string) => {
     if (!comment.trim()) return
     setCommentLoading(true)
-    await addTicketComment(ticketId, companyId, comment)
-    setComment("")
+    const result = await addTicketComment(ticketId, companyId, comment)
     setCommentLoading(false)
+    if (result.error) { toast.error("Failed to post comment", { description: result.error }); return }
+    setComment("")
     fetch(`/api/tickets/${ticketId}/comments`)
       .then((r) => r.json())
       .then((data) => setComments(data))
@@ -344,7 +348,7 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <Label>Assignee</Label>
+                <Label>Assigned To</Label>
                 <Select value={newAssignee} onValueChange={setNewAssignee}>
                   <SelectTrigger>
                     <SelectValue placeholder="Unassigned" />

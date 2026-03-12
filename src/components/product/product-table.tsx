@@ -48,6 +48,12 @@ const priorityLabel: Record<number, string> = {
 
 export function ProductTable({ pcrs, profiles }: Props) {
   const router = useRouter()
+
+  const profileName = (id: string | null) => {
+    if (!id) return null
+    const p = profiles.find((x) => x.id === id)
+    return p ? (p.full_name || p.email) : id
+  }
   const [filter, setFilter] = useState<"All" | PCRStatus>("All")
   const [modalOpen, setModalOpen] = useState(false)
 
@@ -161,7 +167,7 @@ export function ProductTable({ pcrs, profiles }: Props) {
                     </TableCell>
                     <TableCell className="text-sm">{pcr.requested_by}</TableCell>
                     <TableCell className="text-sm">
-                      {pcr.assigned_to ?? <span className="text-muted-foreground">—</span>}
+                      {profileName(pcr.assigned_to) ?? <span className="text-muted-foreground">—</span>}
                     </TableCell>
                     <TableCell>
                       <Select
@@ -181,7 +187,7 @@ export function ProductTable({ pcrs, profiles }: Props) {
                         <div className="flex items-center gap-1 mt-1">
                           <CheckCircle2 className="h-3 w-3 text-green-500 shrink-0" />
                           <span className="text-[11px] text-muted-foreground">
-                            {pcr.completed_by}
+                            {profileName(pcr.completed_by)}
                           </span>
                         </div>
                       )}
@@ -220,7 +226,7 @@ export function ProductTable({ pcrs, profiles }: Props) {
               </SelectTrigger>
               <SelectContent>
                 {profiles.map((p) => (
-                  <SelectItem key={p.id} value={p.full_name || p.email}>
+                  <SelectItem key={p.id} value={p.id}>
                     {p.full_name || p.email}
                   </SelectItem>
                 ))}

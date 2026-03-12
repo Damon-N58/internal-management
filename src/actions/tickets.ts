@@ -44,11 +44,10 @@ export async function createTicket(
   }
   revalidatePath(`/clients/${companyId}`)
   revalidatePath("/tickets")
-  revalidatePath("/analytics")
   return {}
 }
 
-export async function updateTicketStatus(ticketId: string, companyId: string, status: string, actualHours?: number) {
+export async function updateTicketStatus(ticketId: string, companyId: string, status: string, actualHours?: number): Promise<{ error?: string }> {
   const updateData: Record<string, unknown> = { status }
   if (status === "Closed") {
     updateData.closed_at = new Date().toISOString()
@@ -57,12 +56,14 @@ export async function updateTicketStatus(ticketId: string, companyId: string, st
     }
   }
 
-  const { data: ticket } = await supabase
+  const { data: ticket, error } = await supabase
     .from("ticket")
     .update(updateData)
     .eq("id", ticketId)
     .select()
     .single()
+
+  if (error) return { error: error.message }
 
   if (companyId !== "_general") {
     await writeActivityLog(
@@ -73,16 +74,15 @@ export async function updateTicketStatus(ticketId: string, companyId: string, st
   }
   revalidatePath(`/clients/${companyId}`)
   revalidatePath("/tickets")
-  revalidatePath("/analytics")
-  return ticket
+  return {}
 }
 
 export async function updateTicket(
   ticketId: string,
   companyId: string,
   data: Partial<CreateTicketData>
-) {
-  await supabase
+): Promise<{ error?: string }> {
+  const { error } = await supabase
     .from("ticket")
     .update({
       ...(data.title !== undefined && { title: data.title }),
@@ -93,19 +93,23 @@ export async function updateTicket(
     })
     .eq("id", ticketId)
 
+  if (error) return { error: error.message }
   revalidatePath(`/clients/${companyId}`)
+  return {}
 }
 
-export async function addTicketComment(ticketId: string, companyId: string, content: string) {
+export async function addTicketComment(ticketId: string, companyId: string, content: string): Promise<{ error?: string }> {
   const profile = await requireAuth()
 
-  await supabase.from("ticket_comment").insert({
+  const { error } = await supabase.from("ticket_comment").insert({
     ticket_id: ticketId,
     author_id: profile.id,
     content,
   })
 
+  if (error) return { error: error.message }
   revalidatePath(`/clients/${companyId}`)
+  return {}
 }
 
 export async function getTicketComments(ticketId: string) {

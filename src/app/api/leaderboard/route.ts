@@ -29,7 +29,7 @@ export async function GET() {
     )
 
     const pcrsClosed = (pcrs ?? []).filter(
-      (pr) => pr.status === "Completed" && pr.completed_by === name
+      (pr) => pr.status === "Completed" && pr.completed_by === p.id
     ).length
 
     return {

@@ -157,7 +157,7 @@ export function PCRModal({ open, onClose, profiles }: Props) {
               <SelectContent>
                 <SelectItem value="_none">None</SelectItem>
                 {profiles.map((p) => (
-                  <SelectItem key={p.id} value={p.full_name || p.email}>
+                  <SelectItem key={p.id} value={p.id}>
                     {p.full_name || p.email}
                   </SelectItem>
                 ))}
