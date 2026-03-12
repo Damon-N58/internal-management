@@ -5,10 +5,22 @@
  * Requires CLERK_SECRET_KEY in .env.local
  */
 
-import * as dotenv from "dotenv"
-import * as path from "path"
+import { readFileSync } from "fs"
+import { resolve } from "path"
 
-dotenv.config({ path: path.resolve(__dirname, "../.env.local") })
+// Load .env.local without any external dependencies
+try {
+  const envPath = resolve(process.cwd(), ".env.local")
+  const lines = readFileSync(envPath, "utf-8").split("\n")
+  for (const line of lines) {
+    const match = line.match(/^([^#=\s][^=]*)=(.*)$/)
+    if (match) {
+      const key = match[1].trim()
+      const val = match[2].trim().replace(/^["']|["']$/g, "")
+      if (!process.env[key]) process.env[key] = val
+    }
+  }
+} catch { /* .env.local not present */ }
 
 const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY
 if (!CLERK_SECRET_KEY) {
