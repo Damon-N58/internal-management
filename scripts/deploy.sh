@@ -3,7 +3,7 @@ set -e
 
 echo "🚀 Deploying N58 Internal Portal to Vercel..."
 
-# Ensure we're on main and up to date
+# Ensure we're on main and up to date!
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 if [ "$BRANCH" != "main" ]; then
   echo "❌ Must be on main branch to deploy. Currently on: $BRANCH"
