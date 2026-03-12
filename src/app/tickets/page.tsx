@@ -1,11 +1,10 @@
 import { supabase } from "@/lib/supabase"
-import { requireAuth, getUserCompanyIds, isAdmin } from "@/lib/auth"
+import { requireAuth, getUserCompanyIds } from "@/lib/auth"
 import { TicketsKanban } from "@/components/tickets/tickets-kanban"
 
 export default async function TicketsPage() {
   const profile = await requireAuth()
-  const admin = isAdmin(profile)
-  const companyIds = admin ? null : await getUserCompanyIds(profile.id)
+  const companyIds = await getUserCompanyIds(profile.id)
 
   let ticketQuery = supabase
     .from("ticket")
@@ -18,15 +17,13 @@ export default async function TicketsPage() {
     .select("id, name")
     .order("name", { ascending: true })
 
-  if (companyIds) {
-    if (companyIds.length > 0) {
-      ticketQuery = ticketQuery.or(
-        `company_id.in.(${companyIds.join(",")}),assigned_to.eq.${profile.id}`
-      )
-      companyQuery = companyQuery.in("id", companyIds)
-    } else {
-      ticketQuery = ticketQuery.eq("assigned_to", profile.id)
-    }
+  if (companyIds.length > 0) {
+    ticketQuery = ticketQuery.or(
+      `company_id.in.(${companyIds.join(",")}),assigned_to.eq.${profile.id}`
+    )
+    companyQuery = companyQuery.in("id", companyIds)
+  } else {
+    ticketQuery = ticketQuery.eq("assigned_to", profile.id)
   }
 
   const [{ data: tickets }, { data: profiles }, { data: companies }] = await Promise.all([
