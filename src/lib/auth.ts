@@ -1,4 +1,5 @@
 import { currentUser } from "@clerk/nextjs/server"
+import { notFound } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import type { Profile, UserRole } from "@/types"
 
@@ -6,12 +7,15 @@ export async function getCurrentUser(): Promise<Profile | null> {
   const user = await currentUser()
   if (!user) return null
 
-  const { data: profile } = await supabase
+  const { data: profile, error: fetchErr } = await supabase
     .from("profile")
     .select()
     .eq("id", user.id)
     .single()
 
+  if (fetchErr && fetchErr.code !== "PGRST116") {
+    console.error("[auth] profile fetch error:", fetchErr.message)
+  }
   if (profile) return profile
 
   const email = user.emailAddresses[0]?.emailAddress ?? ""
@@ -30,7 +34,7 @@ export async function getCurrentUser(): Promise<Profile | null> {
 
     if (seeded) {
       // Upsert the real profile — idempotent if a concurrent request already created it
-      await supabase.from("profile").upsert(
+      const { error: mergeErr } = await supabase.from("profile").upsert(
         {
           id: user.id,
           email,
@@ -40,12 +44,14 @@ export async function getCurrentUser(): Promise<Profile | null> {
         },
         { onConflict: "id", ignoreDuplicates: true }
       )
+      if (mergeErr) console.error("[auth] profile merge upsert error:", mergeErr.message)
 
       // Re-key any company assignments from the placeholder ID to the real Clerk ID
-      await supabase
+      const { error: rekeyErr } = await supabase
         .from("user_company_assignment")
         .update({ user_id: user.id })
         .eq("user_id", seeded.id)
+      if (rekeyErr) console.error("[auth] assignment re-key error:", rekeyErr.message)
 
       // Delete the placeholder profile (assignments now point to real ID)
       await supabase.from("profile").delete().eq("id", seeded.id)
@@ -64,7 +70,7 @@ export async function getCurrentUser(): Promise<Profile | null> {
   if (!email.endsWith("@nineteen58.co.za")) return null
 
   // Auto-create profile on first access — upsert is idempotent if concurrent requests race
-  await supabase.from("profile").upsert(
+  const { error: upsertErr } = await supabase.from("profile").upsert(
     {
       id: user.id,
       email,
@@ -74,6 +80,7 @@ export async function getCurrentUser(): Promise<Profile | null> {
     },
     { onConflict: "id", ignoreDuplicates: true }
   )
+  if (upsertErr) console.error("[auth] profile create error:", upsertErr.message)
 
   const { data: created } = await supabase
     .from("profile")
@@ -86,9 +93,7 @@ export async function getCurrentUser(): Promise<Profile | null> {
 
 export async function requireAuth(): Promise<Profile> {
   const profile = await getCurrentUser()
-  if (!profile) {
-    throw new Error("Not authenticated")
-  }
+  if (!profile) notFound()
   return profile
 }
 
