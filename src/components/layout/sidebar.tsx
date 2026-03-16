@@ -62,6 +62,7 @@ export function Sidebar({ profile, notificationBell, todoButton, assignedCompani
             width={32}
             height={32}
             className="rounded-md shrink-0"
+            style={{ filter: "brightness(0) saturate(100%) invert(58%) sepia(95%) saturate(1200%) hue-rotate(345deg) brightness(105%)" }}
             unoptimized
           />
           <h1 className="text-2xl font-bold tracking-tight leading-none">Portal</h1>
