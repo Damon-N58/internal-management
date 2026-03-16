@@ -64,7 +64,11 @@ const TEAM_SEED = [
   { full_name: "James MacRobert",     email: "james@nineteen58.co.za", role: "Member" },
   { full_name: "Oliver Rowe",         email: "oliver@nineteen58.co.za",role: "Admin" },
   { full_name: "Renzo Zanetti",       email: "renzo@nineteen58.co.za", role: "Member" },
-  { full_name: "Sebastian Mcintosh",  email: "seb@nineteen58.co.za",   role: "Member" },
+  { full_name: "Sebastian Mcintosh",  email: "seb@nineteen58.co.za",      role: "Member" },
+  { full_name: "Emil Kenguerli",      email: "emil@nineteen58.co.za",     role: "Member" },
+  { full_name: "Lamé Labuschagne",    email: "lame@nineteen58.co.za",     role: "Member" },
+  { full_name: "Rex le Sueur",        email: "rex@nineteen58.co.za",      role: "Member" },
+  { full_name: "Yashmiri Shanmugam",  email: "yashmiri@nineteen58.co.za", role: "Member" },
 ] as const
 
 export async function seedTeamMembers() {
