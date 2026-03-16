@@ -29,14 +29,17 @@ export async function getCurrentUser(): Promise<Profile | null> {
       .maybeSingle()
 
     if (seeded) {
-      // Insert the real profile with the Clerk user ID
-      await supabase.from("profile").insert({
-        id: user.id,
-        email,
-        full_name: seeded.full_name || fullName,
-        role: seeded.role || role,
-        created_at: new Date().toISOString(),
-      })
+      // Upsert the real profile — idempotent if a concurrent request already created it
+      await supabase.from("profile").upsert(
+        {
+          id: user.id,
+          email,
+          full_name: seeded.full_name || fullName,
+          role: seeded.role || role,
+          created_at: new Date().toISOString(),
+        },
+        { onConflict: "id", ignoreDuplicates: true }
+      )
 
       // Re-key any company assignments from the placeholder ID to the real Clerk ID
       await supabase
@@ -57,20 +60,25 @@ export async function getCurrentUser(): Promise<Profile | null> {
     }
   }
 
-  // Auto-create profile on first access
-  const { data: newProfile } = await supabase
-    .from("profile")
-    .insert({
+  // Auto-create profile on first access — upsert is idempotent if concurrent requests race
+  await supabase.from("profile").upsert(
+    {
       id: user.id,
       email,
       full_name: fullName,
       role,
       created_at: new Date().toISOString(),
-    })
+    },
+    { onConflict: "id", ignoreDuplicates: true }
+  )
+
+  const { data: created } = await supabase
+    .from("profile")
     .select()
+    .eq("id", user.id)
     .single()
 
-  return newProfile ?? null
+  return created ?? null
 }
 
 export async function requireAuth(): Promise<Profile> {
