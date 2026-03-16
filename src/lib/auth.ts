@@ -60,6 +60,9 @@ export async function getCurrentUser(): Promise<Profile | null> {
     }
   }
 
+  // Only allow @nineteen58.co.za accounts — block anyone who isn't on the team
+  if (!email.endsWith("@nineteen58.co.za")) return null
+
   // Auto-create profile on first access — upsert is idempotent if concurrent requests race
   await supabase.from("profile").upsert(
     {

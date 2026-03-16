@@ -16,6 +16,7 @@ export default function LoginPage() {
             elements: {
               rootBox: "w-full",
               card: "shadow-sm border rounded-lg",
+              footer: { display: "none" },
             },
           }}
         />
