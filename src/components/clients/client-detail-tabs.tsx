@@ -8,6 +8,7 @@ import { TicketsTab } from "./tickets-tab"
 import { BlockersTab } from "./blockers-tab"
 import { KnowledgeBaseTab } from "./knowledge-base-tab"
 import { AgentsTab } from "./agents-tab"
+import { CsmTab } from "./csm-tab"
 import type {
   Company,
   TechnicalVault,
@@ -49,8 +50,9 @@ export function ClientDetailTabs({ company, teamMembers = [] }: Props) {
   ).length
 
   return (
-    <Tabs defaultValue="overview">
+    <Tabs defaultValue="csm">
       <TabsList>
+        <TabsTrigger value="csm">CSM</TabsTrigger>
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="blockers">
           Blockers
@@ -88,6 +90,9 @@ export function ClientDetailTabs({ company, teamMembers = [] }: Props) {
         </TabsTrigger>
       </TabsList>
 
+      <TabsContent value="csm" className="mt-6">
+        <CsmTab company={company} />
+      </TabsContent>
       <TabsContent value="overview" className="mt-6">
         <OverviewTab company={company} />
       </TabsContent>

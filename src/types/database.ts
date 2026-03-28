@@ -64,6 +64,10 @@ export type Database = {
           conversation_volume: number | null
           google_drive_url: string | null
           website: string | null
+          pipeline_stage: string | null
+          contract_value: number | null
+          next_action: string | null
+          ball_in_court: string | null
           created_at: string
           updated_at: string
         }
@@ -87,6 +91,10 @@ export type Database = {
           conversation_volume?: number | null
           google_drive_url?: string | null
           website?: string | null
+          pipeline_stage?: string | null
+          contract_value?: number | null
+          next_action?: string | null
+          ball_in_court?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -504,6 +512,37 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "todo_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profile"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_members: {
+        Row: {
+          id: string
+          ticket_id: string
+          user_id: string
+          created_at: string
+        }
+        Insert: {
+          id: string
+          ticket_id: string
+          user_id: string
+          created_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["ticket_members"]["Insert"]>
+        Relationships: [
+          {
+            foreignKeyName: "ticket_members_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "ticket"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_members_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profile"

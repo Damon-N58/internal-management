@@ -35,3 +35,5 @@ export type Todo = Database["public"]["Tables"]["todo"]["Row"]
 
 export type UserRole = "Admin" | "Manager" | "Member"
 export type TicketPriority = 1 | 2 | 3 | 4 | 5
+export type PipelineStage = "Signed" | "Onboarding" | "POC Live" | "Full Contract" | "Expansion Work"
+export type BallInCourt = "Us" | "Client" | "Engineering" | "Waiting"

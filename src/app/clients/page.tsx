@@ -10,7 +10,7 @@ export default async function ClientsPage() {
   const [myCompanyIdsResult, companiesResult, profilesResult] = await Promise.all([
     getUserCompanyIds(profile.id),
     admin
-      ? supabase.from("company").select().order("name", { ascending: true })
+      ? supabase.from("company").select("*, blocker(*)").order("name", { ascending: true })
       : null,
     admin
       ? supabase.from("profile").select("id, full_name, email").order("full_name", { ascending: true })
@@ -23,7 +23,7 @@ export default async function ClientsPage() {
     ? (companiesResult?.data ?? [])
     : (await supabase
         .from("company")
-        .select()
+        .select("*, blocker(*)")
         .in("id", myCompanyIds.length > 0 ? myCompanyIds : ["_none"])
         .order("name", { ascending: true })
       ).data ?? []
@@ -42,7 +42,7 @@ export default async function ClientsPage() {
         {admin && <AddCompanyDialog profiles={profiles} />}
       </div>
       <ClientsList
-        allCompanies={allCompanies}
+        allCompanies={allCompanies as never}
         myCompanyIds={myCompanyIds}
         isAdmin={admin}
       />

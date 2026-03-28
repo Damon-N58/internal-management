@@ -180,3 +180,41 @@ export async function recalculateCompanyHealth(companyId: string) {
   revalidatePath(`/clients/${companyId}`)
   return result
 }
+
+export async function updatePipelineStage(companyId: string, stage: string | null): Promise<{ error?: string }> {
+  const { error } = await supabase
+    .from("company")
+    .update({ pipeline_stage: stage })
+    .eq("id", companyId)
+
+  if (error) return { error: error.message }
+  revalidatePath("/clients")
+  revalidatePath(`/clients/${companyId}`)
+  return {}
+}
+
+export async function updateContractValue(companyId: string, value: number | null): Promise<{ error?: string }> {
+  const { error } = await supabase
+    .from("company")
+    .update({ contract_value: value })
+    .eq("id", companyId)
+
+  if (error) return { error: error.message }
+  revalidatePath("/clients")
+  revalidatePath(`/clients/${companyId}`)
+  return {}
+}
+
+export async function updateCsmComms(
+  companyId: string,
+  data: { next_action?: string | null; ball_in_court?: string | null }
+): Promise<{ error?: string }> {
+  const { error } = await supabase
+    .from("company")
+    .update(data)
+    .eq("id", companyId)
+
+  if (error) return { error: error.message }
+  revalidatePath(`/clients/${companyId}`)
+  return {}
+}

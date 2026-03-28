@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "deploy": "git push origin main && ~/.npm-global/bin/vercel --prod --yes"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.38.2",

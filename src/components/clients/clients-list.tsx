@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import {
@@ -15,47 +15,95 @@ import { HealthBadge } from "@/components/health-badge"
 import { StatusBadge } from "@/components/status-badge"
 import { getFaviconUrl } from "@/lib/favicon"
 import { cn } from "@/lib/utils"
-import type { Company } from "@/types"
+import { PipelineKanban } from "./pipeline-kanban"
+import type { Company, Blocker } from "@/types"
+
+type PipelineCompany = Company & { blocker: Blocker[] }
 
 type Props = {
-  allCompanies: Company[]
+  allCompanies: PipelineCompany[]
   myCompanyIds: string[]
   isAdmin: boolean
 }
 
+type ViewMode = "engineering" | "csm"
+
+const VIEW_MODE_KEY = "n58_clients_view_mode"
+
 export function ClientsList({ allCompanies, myCompanyIds, isAdmin }: Props) {
   const [showAll, setShowAll] = useState(false)
+  const [viewMode, setViewMode] = useState<ViewMode>("engineering")
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    const stored = localStorage.getItem(VIEW_MODE_KEY) as ViewMode | null
+    if (stored === "csm" || stored === "engineering") setViewMode(stored)
+    setMounted(true)
+  }, [])
+
+  const handleViewMode = (mode: ViewMode) => {
+    setViewMode(mode)
+    localStorage.setItem(VIEW_MODE_KEY, mode)
+  }
 
   const companies = showAll
     ? allCompanies
     : allCompanies.filter((c) => myCompanyIds.includes(c.id))
 
+  if (!mounted) return null
+
   return (
     <div className="space-y-4">
-      {isAdmin && (
-        <div className="flex items-center gap-1 rounded-lg border bg-white p-1 w-fit">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        {isAdmin && (
+          <div className="flex items-center gap-1 rounded-lg border bg-white p-1 w-fit">
+            <button
+              onClick={() => setShowAll(false)}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                !showAll ? "bg-slate-900 text-white" : "text-slate-600 hover:text-slate-900"
+              )}
+            >
+              My Clients
+            </button>
+            <button
+              onClick={() => setShowAll(true)}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                showAll ? "bg-slate-900 text-white" : "text-slate-600 hover:text-slate-900"
+              )}
+            >
+              All Clients
+            </button>
+          </div>
+        )}
+
+        <div className="flex items-center gap-1 rounded-lg border bg-white p-1 w-fit ml-auto">
           <button
-            onClick={() => setShowAll(false)}
+            onClick={() => handleViewMode("engineering")}
             className={cn(
               "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-              !showAll ? "bg-slate-900 text-white" : "text-slate-600 hover:text-slate-900"
+              viewMode === "engineering" ? "bg-slate-900 text-white" : "text-slate-600 hover:text-slate-900"
             )}
           >
-            My Clients
+            Engineering
           </button>
           <button
-            onClick={() => setShowAll(true)}
+            onClick={() => handleViewMode("csm")}
             className={cn(
               "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-              showAll ? "bg-slate-900 text-white" : "text-slate-600 hover:text-slate-900"
+              viewMode === "csm" ? "bg-slate-900 text-white" : "text-slate-600 hover:text-slate-900"
             )}
           >
-            All Clients
+            CSM Pipeline
           </button>
         </div>
-      )}
+      </div>
+
       {companies.length === 0 ? (
         <p className="text-sm text-muted-foreground">No clients yet.</p>
+      ) : viewMode === "csm" ? (
+        <PipelineKanban companies={companies.filter((c) => c.id !== "_general")} />
       ) : (
         <div className="rounded-lg border bg-white">
           <Table>
