@@ -23,14 +23,14 @@ type PipelineCompany = Company & { blocker: Blocker[] }
 type Props = {
   allCompanies: PipelineCompany[]
   myCompanyIds: string[]
-  isAdmin: boolean
+  isManagerOrAbove: boolean
 }
 
 type ViewMode = "engineering" | "csm"
 
 const VIEW_MODE_KEY = "n58_clients_view_mode"
 
-export function ClientsList({ allCompanies, myCompanyIds, isAdmin }: Props) {
+export function ClientsList({ allCompanies, myCompanyIds, isManagerOrAbove }: Props) {
   const [showAll, setShowAll] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>("engineering")
   const [mounted, setMounted] = useState(false)
@@ -55,7 +55,7 @@ export function ClientsList({ allCompanies, myCompanyIds, isAdmin }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        {isAdmin && (
+        {isManagerOrAbove && (
           <div className="flex items-center gap-1 rounded-lg border bg-white p-1 w-fit">
             <button
               onClick={() => setShowAll(false)}
@@ -124,7 +124,7 @@ export function ClientsList({ allCompanies, myCompanyIds, isAdmin }: Props) {
                 return (
                   <TableRow key={company.id} className="cursor-pointer hover:bg-slate-50">
                     <TableCell>
-                      <Link href={`/clients/${company.id}`} className="flex items-center gap-2">
+                      <Link href={`/clients/${company.id}?tab=overview`} className="flex items-center gap-2">
                         {favicon ? (
                           <Image
                             src={favicon}

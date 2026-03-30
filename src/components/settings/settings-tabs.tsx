@@ -45,7 +45,7 @@ export function SettingsTabs({
       <TabsList>
         <TabsTrigger value="profile">Profile</TabsTrigger>
         {isManagerOrAbove && <TabsTrigger value="team">Team</TabsTrigger>}
-        {isAdmin && <TabsTrigger value="assignments">Client Assignments</TabsTrigger>}
+        {isManagerOrAbove && <TabsTrigger value="assignments">Client Assignments</TabsTrigger>}
       </TabsList>
 
       <TabsContent value="profile" className="mt-6">
@@ -62,7 +62,7 @@ export function SettingsTabs({
         </TabsContent>
       )}
 
-      {isAdmin && (
+      {isManagerOrAbove && (
         <TabsContent value="assignments" className="mt-6">
           <AssignmentsTab
             assignments={assignments as Assignment[]}

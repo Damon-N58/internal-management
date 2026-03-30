@@ -27,7 +27,7 @@ const defaultForm = {
 }
 
 export function TeamTab({ profiles: initialProfiles, currentUserId, isAdmin: admin }: Props) {
-  const [profiles] = useState(initialProfiles)
+  const [profiles, setProfiles] = useState(initialProfiles)
   const [form, setForm] = useState(defaultForm)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -46,6 +46,7 @@ export function TeamTab({ profiles: initialProfiles, currentUserId, isAdmin: adm
   }
 
   const handleRoleChange = async (userId: string, role: UserRole) => {
+    setProfiles((prev) => prev.map((p) => p.id === userId ? { ...p, role } : p))
     await updateUserRole(userId, role)
   }
 

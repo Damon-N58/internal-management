@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Bell, BellDot, Check, CheckCheck, Clock, TrendingDown, AlertTriangle, RefreshCw } from "lucide-react"
+import { Bell, BellDot, Check, CheckCheck, Clock, TrendingDown, AlertTriangle, RefreshCw, Ticket, MessageSquare, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { markNotificationRead, markAllNotificationsRead } from "@/actions/notifications"
 import { formatDistanceToNow } from "date-fns"
@@ -10,6 +10,7 @@ import type { Notification } from "@/types"
 type Props = {
   notifications: Notification[]
   unreadCount: number
+  userId: string
 }
 
 const typeConfig: Record<string, { icon: React.ElementType; color: string; label: string }> = {
@@ -17,9 +18,12 @@ const typeConfig: Record<string, { icon: React.ElementType; color: string; label
   HEALTH_DROP: { icon: TrendingDown, color: "text-red-600", label: "Health Drop" },
   STALE_BLOCKER: { icon: AlertTriangle, color: "text-orange-600", label: "Stale Blocker" },
   NO_ACTIVITY: { icon: RefreshCw, color: "text-slate-500", label: "No Activity" },
+  TICKET_STATUS: { icon: Ticket, color: "text-blue-600", label: "Ticket Update" },
+  TICKET_COMMENT: { icon: MessageSquare, color: "text-violet-600", label: "New Comment" },
+  TICKET_ASSIGNED: { icon: UserPlus, color: "text-green-600", label: "Ticket Assigned" },
 }
 
-export function NotificationBell({ notifications, unreadCount }: Props) {
+export function NotificationBell({ notifications, unreadCount, userId }: Props) {
   const [open, setOpen] = useState(false)
 
   const handleMarkRead = async (id: string) => {
@@ -27,7 +31,7 @@ export function NotificationBell({ notifications, unreadCount }: Props) {
   }
 
   const handleMarkAll = async () => {
-    await markAllNotificationsRead()
+    await markAllNotificationsRead(userId)
     setOpen(false)
   }
 

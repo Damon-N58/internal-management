@@ -1,5 +1,6 @@
 "use client"
 
+import { useSearchParams } from "next/navigation"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { OverviewTab } from "./overview-tab"
 import { VaultTab } from "./vault-tab"
@@ -42,6 +43,8 @@ type Props = {
 }
 
 export function ClientDetailTabs({ company, teamMembers = [] }: Props) {
+  const searchParams = useSearchParams()
+  const defaultTab = searchParams.get("tab") ?? "csm"
   const openBlockerCount = company.blocker.filter((b) => b.status === "Open").length
   const openTicketCount = company.ticket.filter((t) => t.status !== "Closed").length
   const today = new Date().toISOString().slice(0, 10)
@@ -50,7 +53,7 @@ export function ClientDetailTabs({ company, teamMembers = [] }: Props) {
   ).length
 
   return (
-    <Tabs defaultValue="csm">
+    <Tabs defaultValue={defaultTab}>
       <TabsList>
         <TabsTrigger value="csm">CSM</TabsTrigger>
         <TabsTrigger value="overview">Overview</TabsTrigger>

@@ -3,6 +3,7 @@
 import { supabase } from "@/lib/supabase"
 import { revalidatePath } from "next/cache"
 import { writeActivityLog } from "@/actions/activity-logs"
+import { notifyTicketParticipants } from "@/actions/notifications"
 import { requireAuth } from "@/lib/auth"
 
 function genId() {
@@ -21,11 +22,12 @@ type CreateTicketData = {
 export async function createTicket(
   companyId: string,
   data: CreateTicketData
-): Promise<{ error?: string }> {
+): Promise<{ error?: string; id?: string }> {
+  const id = genId()
   const { error } = await supabase
     .from("ticket")
     .insert({
-      id: genId(),
+      id,
       title: data.title,
       description: data.description || null,
       priority: data.priority ?? 3,
@@ -42,7 +44,7 @@ export async function createTicket(
   await writeActivityLog(companyId, `Ticket created: "${data.title}"`, "Automated")
   revalidatePath(`/clients/${companyId}`)
   revalidatePath("/tickets")
-  return {}
+  return { id }
 }
 
 export async function updateTicketStatus(ticketId: string, companyId: string, status: string, actualHours?: number): Promise<{ error?: string }> {
@@ -63,11 +65,19 @@ export async function updateTicketStatus(ticketId: string, companyId: string, st
 
   if (error) return { error: error.message }
 
-  await writeActivityLog(
-    companyId,
-    `Ticket "${ticket?.title}" status changed to ${status}`,
-    "Automated"
-  )
+  const actor = await requireAuth().catch(() => null)
+
+  await Promise.all([
+    writeActivityLog(companyId, `Ticket "${ticket?.title}" status changed to ${status}`, "Automated"),
+    notifyTicketParticipants({
+      ticketId,
+      companyId,
+      type: "TICKET_STATUS",
+      message: `Ticket "${ticket?.title}" moved to ${status}`,
+      actorId: actor?.id,
+    }),
+  ])
+
   revalidatePath(`/clients/${companyId}`)
   revalidatePath("/tickets")
   return {}
@@ -78,6 +88,8 @@ export async function updateTicket(
   companyId: string,
   data: Partial<CreateTicketData>
 ): Promise<{ error?: string }> {
+  const { data: before } = await supabase.from("ticket").select("assigned_to, title").eq("id", ticketId).single()
+
   const { error } = await supabase
     .from("ticket")
     .update({
@@ -91,6 +103,20 @@ export async function updateTicket(
     .eq("id", ticketId)
 
   if (error) return { error: error.message }
+
+  // Notify the newly assigned person if assignee changed
+  const newAssignee = data.assigned_to
+  if (newAssignee && newAssignee !== before?.assigned_to) {
+    await supabase.from("notification").insert({
+      type: "TICKET_ASSIGNED",
+      message: `You were assigned to ticket "${before?.title ?? data.title}"`,
+      priority: 2,
+      company_id: companyId,
+      ticket_id: ticketId,
+      user_id: newAssignee,
+    })
+  }
+
   revalidatePath(`/clients/${companyId}`)
   revalidatePath("/tickets")
   return {}
@@ -126,6 +152,17 @@ export async function addTicketComment(ticketId: string, companyId: string, cont
   })
 
   if (error) return { error: error.message }
+
+  const { data: ticket } = await supabase.from("ticket").select("title").eq("id", ticketId).single()
+
+  await notifyTicketParticipants({
+    ticketId,
+    companyId,
+    type: "TICKET_COMMENT",
+    message: `${profile.full_name || profile.email} commented on "${ticket?.title}"`,
+    actorId: profile.id,
+  })
+
   revalidatePath(`/clients/${companyId}`)
   return {}
 }
@@ -146,6 +183,20 @@ export async function addTicketMember(ticketId: string, userId: string): Promise
     .upsert({ id: genId(), ticket_id: ticketId, user_id: userId }, { onConflict: "ticket_id,user_id" })
 
   if (error) return { error: error.message }
+
+  const { data: ticket } = await supabase.from("ticket").select("title, company_id").eq("id", ticketId).single()
+
+  if (ticket) {
+    await supabase.from("notification").insert({
+      type: "TICKET_ASSIGNED",
+      message: `You were added to ticket "${ticket.title}"`,
+      priority: 2,
+      company_id: ticket.company_id,
+      ticket_id: ticketId,
+      user_id: userId,
+    })
+  }
+
   return {}
 }
 

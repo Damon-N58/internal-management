@@ -106,7 +106,51 @@ export async function markNotificationRead(id: string) {
   revalidatePath("/")
 }
 
-export async function markAllNotificationsRead() {
-  await supabase.from("notification").update({ is_read: true }).eq("is_read", false)
+export async function markAllNotificationsRead(userId: string) {
+  await supabase
+    .from("notification")
+    .update({ is_read: true })
+    .eq("is_read", false)
+    .or(`user_id.eq.${userId},user_id.is.null`)
   revalidatePath("/")
+}
+
+// Notify all participants on a ticket (assigned_to + members) except the actor
+export async function notifyTicketParticipants({
+  ticketId,
+  companyId,
+  type,
+  message,
+  actorId,
+}: {
+  ticketId: string
+  companyId: string
+  type: string
+  message: string
+  actorId?: string | null
+}) {
+  const [{ data: ticket }, { data: members }, { data: companyAssignees }] = await Promise.all([
+    supabase.from("ticket").select("assigned_to").eq("id", ticketId).single(),
+    supabase.from("ticket_members").select("user_id").eq("ticket_id", ticketId),
+    supabase.from("user_company_assignment").select("user_id").eq("company_id", companyId),
+  ])
+
+  const recipientSet = new Set<string>()
+  if (ticket?.assigned_to) recipientSet.add(ticket.assigned_to)
+  for (const m of members ?? []) recipientSet.add(m.user_id)
+  for (const a of companyAssignees ?? []) recipientSet.add(a.user_id)
+  if (actorId) recipientSet.delete(actorId)
+
+  if (recipientSet.size === 0) return
+
+  await supabase.from("notification").insert(
+    Array.from(recipientSet).map((uid) => ({
+      type,
+      message,
+      priority: 2,
+      company_id: companyId,
+      ticket_id: ticketId,
+      user_id: uid,
+    }))
+  )
 }

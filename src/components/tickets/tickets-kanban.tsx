@@ -43,6 +43,8 @@ type Props = {
   tickets: TicketWithCompany[]
   teamMembers: TeamMember[]
   companies: CompanyOption[]
+  profileId: string
+  myMemberTicketIds: string[]
 }
 
 const columns: { status: TicketStatus; label: string; color: string; bgColor: string }[] = [
@@ -60,8 +62,9 @@ const priorityLabel: Record<number, { text: string; dot: string }> = {
   5: { text: "Minimal", dot: "bg-slate-400" },
 }
 
-export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
+export function TicketsKanban({ tickets, teamMembers, companies, profileId, myMemberTicketIds }: Props) {
   const router = useRouter()
+  const [filterCompany, setFilterCompany] = useState("mine")
   const [createOpen, setCreateOpen] = useState(false)
   const [detailTicket, setDetailTicket] = useState<TicketWithCompany | null>(null)
   const [comment, setComment] = useState("")
@@ -88,7 +91,7 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
   const [editTitle, setEditTitle] = useState("")
   const [editDescription, setEditDescription] = useState("")
   const [editPriority, setEditPriority] = useState("3")
-  const [editAssignee, setEditAssignee] = useState("")
+  const [editAssignee, setEditAssignee] = useState("none")
   const [editDueDate, setEditDueDate] = useState("")
   const [editEstHours, setEditEstHours] = useState("")
   const [editLoading, setEditLoading] = useState(false)
@@ -109,6 +112,8 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
   const [newAssignee, setNewAssignee] = useState("")
   const [newDueDate, setNewDueDate] = useState("")
   const [newEstimatedHours, setNewEstimatedHours] = useState("")
+  const [newPeople, setNewPeople] = useState<string[]>([])
+  const [newPersonToAdd, setNewPersonToAdd] = useState("")
   const [creating, setCreating] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<{ title?: string; company?: string }>({})
 
@@ -150,7 +155,7 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
     setEditTitle(detailTicket.title)
     setEditDescription(detailTicket.description || "")
     setEditPriority(String(detailTicket.priority))
-    setEditAssignee(detailTicket.assigned_to || "")
+    setEditAssignee(detailTicket.assigned_to || "none")
     setEditDueDate(detailTicket.due_date ? detailTicket.due_date.split("T")[0] : "")
     setEditEstHours(detailTicket.estimated_hours != null ? String(detailTicket.estimated_hours) : "")
     setEditMode(true)
@@ -163,7 +168,7 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
       title: editTitle.trim(),
       description: editDescription.trim() || undefined,
       priority: parseInt(editPriority),
-      assigned_to: editAssignee || null,
+      assigned_to: editAssignee === "none" ? null : editAssignee || null,
       due_date: editDueDate || null,
       estimated_hours: editEstHours ? parseFloat(editEstHours) : null,
     })
@@ -175,7 +180,7 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
       title: editTitle.trim(),
       description: editDescription.trim() || null,
       priority: parseInt(editPriority),
-      assigned_to: editAssignee || null,
+      assigned_to: editAssignee === "none" ? null : editAssignee || null,
       due_date: editDueDate || null,
       estimated_hours: editEstHours ? parseFloat(editEstHours) : null,
     })
@@ -228,9 +233,12 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
     })
     setCreating(false)
     if (result.error) { toast.error("Failed to create ticket", { description: result.error }); return }
+    if (result.id && newPeople.length > 0) {
+      await Promise.all(newPeople.map((uid) => addTicketMember(result.id!, uid)))
+    }
     setCreateOpen(false)
     setFieldErrors({})
-    setNewTitle(""); setNewDescription(""); setNewCompany(""); setNewPriority("3"); setNewAssignee(""); setNewDueDate(""); setNewEstimatedHours("")
+    setNewTitle(""); setNewDescription(""); setNewCompany(""); setNewPriority("3"); setNewAssignee(""); setNewDueDate(""); setNewEstimatedHours(""); setNewPeople([]); setNewPersonToAdd("")
     router.refresh()
   }
 
@@ -282,11 +290,26 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
     router.refresh()
   }
 
+  const visibleTickets = filterCompany === "mine"
+    ? tickets.filter((t) => t.assigned_to === profileId || myMemberTicketIds.includes(t.id))
+    : tickets.filter((t) => t.company_id === filterCompany)
+
   return (
     <>
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <span>{tickets.length} total ticket{tickets.length !== 1 ? "s" : ""}</span>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span>{visibleTickets.length} ticket{visibleTickets.length !== 1 ? "s" : ""}</span>
+          <Select value={filterCompany} onValueChange={setFilterCompany}>
+            <SelectTrigger className="h-8 w-[180px] text-sm">
+              <SelectValue placeholder="All clients" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="mine">My tickets</SelectItem>
+              {companies.map((c) => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <Button onClick={() => setCreateOpen(true)} size="sm">
           <Plus className="h-4 w-4 mr-1" />
@@ -297,7 +320,7 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
       {/* Kanban Board */}
       <div className="grid grid-cols-4 gap-4 min-h-[calc(100vh-16rem)]">
         {columns.map(({ status, label, color, bgColor }) => {
-          const columnTickets = tickets.filter((t) => t.status === status)
+          const columnTickets = visibleTickets.filter((t) => t.status === status)
           return (
             <div
               key={status}
@@ -439,18 +462,7 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <Label>Assigned To</Label>
-                <Select value={newAssignee} onValueChange={setNewAssignee}>
-                  <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
-                  <SelectContent>
-                    {teamMembers.map((m) => (
-                      <SelectItem key={m.id} value={m.id}>{m.full_name || m.email}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>Due Date</Label>
                 <Input type="date" value={newDueDate} onChange={(e) => setNewDueDate(e.target.value)} />
@@ -459,6 +471,37 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
                 <Label>Est. Hours</Label>
                 <Input type="number" step="0.5" min="0" value={newEstimatedHours} onChange={(e) => setNewEstimatedHours(e.target.value)} placeholder="e.g. 2" />
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>People</Label>
+              <div className="flex flex-wrap gap-1.5 mb-1.5">
+                {newPeople.map((uid) => {
+                  const m = teamMembers.find((t) => t.id === uid)
+                  if (!m) return null
+                  return (
+                    <span key={uid} className="inline-flex items-center gap-1 rounded-full bg-slate-100 border px-2.5 py-0.5 text-xs font-medium">
+                      {m.full_name || m.email}
+                      <button type="button" onClick={() => setNewPeople((p) => p.filter((id) => id !== uid))} className="ml-0.5 text-muted-foreground hover:text-red-600">×</button>
+                    </span>
+                  )
+                })}
+              </div>
+              <Select
+                value={newPersonToAdd}
+                onValueChange={(uid) => {
+                  if (uid && !newPeople.includes(uid)) setNewPeople((p) => [...p, uid])
+                  setNewPersonToAdd("")
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Add person..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {teamMembers.filter((m) => !newPeople.includes(m.id)).map((m) => (
+                    <SelectItem key={m.id} value={m.id}>{m.full_name || m.email}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => setCreateOpen(false)} disabled={creating}>Cancel</Button>
@@ -583,7 +626,7 @@ export function TicketsKanban({ tickets, teamMembers, companies }: Props) {
                       <Select value={editAssignee} onValueChange={setEditAssignee}>
                         <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Unassigned</SelectItem>
+                          <SelectItem value="none">Unassigned</SelectItem>
                           {teamMembers.map((m) => (
                             <SelectItem key={m.id} value={m.id}>{m.full_name || m.email}</SelectItem>
                           ))}

@@ -1,25 +1,26 @@
 import { supabase } from "@/lib/supabase"
-import { requireAuth, getUserCompanyIds, isAdmin } from "@/lib/auth"
+import { requireAuth, getUserCompanyIds, isAdmin, isManagerOrAbove } from "@/lib/auth"
 import { AddCompanyDialog } from "@/components/clients/add-company-dialog"
 import { ClientsList } from "@/components/clients/clients-list"
 
 export default async function ClientsPage() {
   const profile = await requireAuth()
   const admin = isAdmin(profile)
+  const managerOrAbove = isManagerOrAbove(profile)
 
   const [myCompanyIdsResult, companiesResult, profilesResult] = await Promise.all([
     getUserCompanyIds(profile.id),
-    admin
+    managerOrAbove
       ? supabase.from("company").select("*, blocker(*)").order("name", { ascending: true })
       : null,
-    admin
+    managerOrAbove
       ? supabase.from("profile").select("id, full_name, email").order("full_name", { ascending: true })
       : null,
   ])
 
   const myCompanyIds = myCompanyIdsResult
 
-  const allCompanies = admin
+  const allCompanies = managerOrAbove
     ? (companiesResult?.data ?? [])
     : (await supabase
         .from("company")
@@ -36,15 +37,15 @@ export default async function ClientsPage() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Clients</h2>
           <p className="text-muted-foreground">
-            {admin ? "Manage client accounts" : "Your assigned client accounts"}
+            {managerOrAbove ? "Manage client accounts" : "Your assigned client accounts"}
           </p>
         </div>
-        {admin && <AddCompanyDialog profiles={profiles} />}
+        {managerOrAbove && <AddCompanyDialog profiles={profiles} />}
       </div>
       <ClientsList
         allCompanies={allCompanies as never}
         myCompanyIds={myCompanyIds}
-        isAdmin={admin}
+        isManagerOrAbove={managerOrAbove}
       />
     </div>
   )

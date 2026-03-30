@@ -401,6 +401,8 @@ export type Database = {
           priority: number
           is_read: boolean
           company_id: string | null
+          user_id: string | null
+          ticket_id: string | null
           created_at: string
         }
         Insert: {
@@ -410,6 +412,8 @@ export type Database = {
           priority?: number
           is_read?: boolean
           company_id?: string | null
+          user_id?: string | null
+          ticket_id?: string | null
         }
         Update: Partial<Database["public"]["Tables"]["notification"]["Insert"]>
         Relationships: [

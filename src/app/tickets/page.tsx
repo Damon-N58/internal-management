@@ -1,31 +1,22 @@
 import { supabase } from "@/lib/supabase"
-import { requireAuth, getUserCompanyIds } from "@/lib/auth"
+import { requireAuth } from "@/lib/auth"
 import { TicketsKanban } from "@/components/tickets/tickets-kanban"
 
 export default async function TicketsPage() {
   const profile = await requireAuth()
-  const companyIds = await getUserCompanyIds(profile.id)
 
-  let ticketQuery = supabase
-    .from("ticket")
-    .select("*, company:company_id(id, name)")
-    .order("priority", { ascending: true })
-    .order("created_at", { ascending: false })
-
-  if (companyIds.length > 0) {
-    ticketQuery = ticketQuery.or(
-      `company_id.in.(${companyIds.join(",")}),assigned_to.eq.${profile.id}`
-    )
-  } else {
-    ticketQuery = ticketQuery.eq("assigned_to", profile.id)
-  }
-
-  // All companies available for ticket creation — not limited to the user's own assignments
-  const [{ data: tickets }, { data: profiles }, { data: companies }] = await Promise.all([
-    ticketQuery,
+  const [{ data: tickets }, { data: profiles }, { data: companies }, { data: memberRows }] = await Promise.all([
+    supabase
+      .from("ticket")
+      .select("*, company:company_id(id, name)")
+      .order("priority", { ascending: true })
+      .order("created_at", { ascending: false }),
     supabase.from("profile").select("id, full_name, email"),
-    supabase.from("company").select("id, name").order("name", { ascending: true }),
+    supabase.from("company").select("id, name").neq("id", "_general").order("name", { ascending: true }),
+    supabase.from("ticket_members").select("ticket_id").eq("user_id", profile.id),
   ])
+
+  const myMemberTicketIds = new Set((memberRows ?? []).map((r) => r.ticket_id))
 
   const ticketsWithCompany = (tickets ?? []).map((t) => ({
     ...t,
@@ -54,6 +45,8 @@ export default async function TicketsPage() {
         tickets={ticketsWithCompany}
         teamMembers={teamMembers}
         companies={companyList}
+        profileId={profile.id}
+        myMemberTicketIds={Array.from(myMemberTicketIds)}
       />
     </div>
   )

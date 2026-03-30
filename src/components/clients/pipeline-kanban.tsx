@@ -47,16 +47,14 @@ export function PipelineKanban({ companies }: Props) {
   const [dragId, setDragId] = useState<string | null>(null)
   const [dragOverStage, setDragOverStage] = useState<string | null>(null)
 
-  const handleDrop = async (stage: string) => {
-    if (!dragId) return
-    const company = companies.find((c) => c.id === dragId)
-    if (!company || company.pipeline_stage === stage) {
-      setDragId(null)
-      setDragOverStage(null)
-      return
-    }
+  const handleDrop = async (e: React.DragEvent, stage: string) => {
+    e.preventDefault()
+    const companyId = e.dataTransfer.getData("text/plain")
     setDragId(null)
     setDragOverStage(null)
+    if (!companyId) return
+    const company = companies.find((c) => c.id === companyId)
+    if (!company || company.pipeline_stage === stage) return
     const result = await updatePipelineStage(company.id, stage)
     if (result.error) {
       toast.error("Failed to update stage", { description: result.error })
@@ -78,14 +76,24 @@ export function PipelineKanban({ companies }: Props) {
           </p>
           <div className="flex flex-wrap gap-2">
             {unstagedCompanies.map((company) => (
-              <Link
+              <div
                 key={company.id}
-                href={`/clients/${company.id}`}
-                className="inline-flex items-center gap-1.5 rounded-full border bg-white px-3 py-1 text-xs font-medium hover:bg-slate-50"
+                draggable
+                onDragStart={(e) => { e.dataTransfer.setData("text/plain", company.id); setDragId(company.id) }}
+                onDragEnd={() => { setDragId(null); setDragOverStage(null) }}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full border bg-white px-3 py-1 text-xs font-medium cursor-grab active:cursor-grabbing hover:bg-slate-50",
+                  dragId === company.id && "opacity-40"
+                )}
               >
                 <span className={cn("h-2 w-2 rounded-full shrink-0", ragDot(company.health_score))} />
-                {company.name}
-              </Link>
+                <Link
+                  href={`/clients/${company.id}?tab=csm`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {company.name}
+                </Link>
+              </div>
             ))}
           </div>
         </div>
@@ -106,8 +114,8 @@ export function PipelineKanban({ companies }: Props) {
                 isOver ? "bg-slate-100" : "bg-slate-50/50"
               )}
               onDragOver={(e) => { e.preventDefault(); setDragOverStage(key) }}
-              onDragLeave={() => setDragOverStage(null)}
-              onDrop={() => handleDrop(key)}
+              onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverStage(null) }}
+              onDrop={(e) => handleDrop(e, key)}
             >
               <div className="flex items-center justify-between mb-2.5 px-0.5">
                 <div className="flex items-center gap-1.5">
@@ -138,7 +146,7 @@ export function PipelineKanban({ companies }: Props) {
                     <div
                       key={company.id}
                       draggable
-                      onDragStart={() => setDragId(company.id)}
+                      onDragStart={(e) => { e.dataTransfer.setData("text/plain", company.id); setDragId(company.id) }}
                       onDragEnd={() => { setDragId(null); setDragOverStage(null) }}
                       className={cn(
                         "rounded-lg border bg-white p-2.5 cursor-grab active:cursor-grabbing group hover:shadow-sm transition-shadow",
@@ -157,7 +165,7 @@ export function PipelineKanban({ companies }: Props) {
                               </div>
                             )}
                             <Link
-                              href={`/clients/${company.id}`}
+                              href={`/clients/${company.id}?tab=csm`}
                               className="text-xs font-semibold leading-tight hover:underline truncate"
                               onClick={(e) => e.stopPropagation()}
                             >
