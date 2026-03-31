@@ -79,7 +79,7 @@ export function PipelineTimeline({ deadlines, companyId }: Props) {
 
   // Measure dot + row-boundary positions, route connector around all text
   const recalcConnectors = useCallback(() => {
-    if (rows.length <= 1 || !containerRef.current) return
+    if (rows.length <= 1 || !containerRef.current) { setSvgPaths([]); return }
     const cRect = containerRef.current.getBoundingClientRect()
     const containerW = cRect.width
     const paths: string[] = []
