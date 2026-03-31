@@ -308,12 +308,14 @@ export type Database = {
           description: string
           due_date: string
           company_id: string
+          category: string | null
         }
         Insert: {
           id?: string
           description: string
           due_date: string
           company_id: string
+          category?: string | null
         }
         Update: Partial<Database["public"]["Tables"]["deadline"]["Insert"]>
         Relationships: [

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { format, formatDistanceToNow } from "date-fns"
+import { formatDistanceToNow } from "date-fns"
 import {
   Users,
   Bot,
@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { updatePipelineStage, updateContractValue, updateCsmComms } from "@/actions/companies"
+import { createActivityLog } from "@/actions/activity-logs"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import type {
@@ -35,7 +36,9 @@ import type {
   Deadline,
   Blocker,
   AgentConfig,
+  ActivityLogType,
 } from "@/types"
+import { PipelineTimeline } from "@/components/clients/pipeline-timeline"
 
 type FullCompany = Company & {
   technical_vault: TechnicalVault | null
@@ -102,6 +105,12 @@ export function CsmTab({ company }: Props) {
   // Ball in court
   const [ballLoading, setBallLoading] = useState(false)
 
+  // Touchpoint logging
+  const [showTouchpoint, setShowTouchpoint] = useState(false)
+  const [touchpointContent, setTouchpointContent] = useState("")
+  const [touchpointType, setTouchpointType] = useState<ActivityLogType>("Call")
+  const [touchpointLoading, setTouchpointLoading] = useState(false)
+
   const openBlockers = company.blocker.filter((b) => b.status === "Open")
   const openTickets = company.ticket.filter((t) => t.status !== "Closed")
   const lastActivity = [...company.activity_log]
@@ -140,6 +149,17 @@ export function CsmTab({ company }: Props) {
     const result = await updateCsmComms(company.id, { ball_in_court: ball === "none" ? null : ball })
     setBallLoading(false)
     if (result.error) { toast.error("Failed to update"); return }
+    router.refresh()
+  }
+
+  const handleTouchpointLog = async () => {
+    if (!touchpointContent.trim()) { toast.error("Please enter a note"); return }
+    setTouchpointLoading(true)
+    await createActivityLog(company.id, touchpointContent.trim(), touchpointType)
+    setTouchpointLoading(false)
+    setTouchpointContent("")
+    setTouchpointType("Call")
+    setShowTouchpoint(false)
     router.refresh()
   }
 
@@ -313,52 +333,63 @@ export function CsmTab({ company }: Props) {
         </div>
       </div>
 
-      {/* Block C: 6-Month Pipeline (Deadlines) */}
+      {/* Block C: Upcoming Pipeline (interactive timeline) */}
       <div className="rounded-lg border bg-white p-4">
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2 mb-4">
           <CalendarClock className="h-4 w-4 text-muted-foreground" />
           <BlockLabel label="Upcoming Pipeline" className="mb-0" />
         </div>
-        {company.deadline.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No deadlines set. Add them in the Overview tab.</p>
-        ) : (
-          <div className="relative">
-            <div className="absolute left-[7px] top-2 bottom-2 w-px bg-slate-200" />
-            <div className="space-y-3">
-              {[...company.deadline]
-                .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
-                .map((d) => {
-                  const isPast = new Date(d.due_date) < new Date()
-                  return (
-                    <div key={d.id} className="flex items-center gap-3 pl-1">
-                      <div className={cn(
-                        "h-3.5 w-3.5 rounded-full border-2 shrink-0 bg-white",
-                        isPast ? "border-slate-300" : "border-slate-500"
-                      )} />
-                      <div className="flex items-center justify-between flex-1 gap-4">
-                        <span className={cn("text-sm", isPast && "text-muted-foreground line-through")}>
-                          {d.description}
-                        </span>
-                        <span className="text-xs text-muted-foreground shrink-0">
-                          {format(new Date(d.due_date), "MMM d, yyyy")}
-                        </span>
-                      </div>
-                    </div>
-                  )
-                })}
-            </div>
-          </div>
-        )}
+        <PipelineTimeline deadlines={company.deadline} companyId={company.id} />
       </div>
 
       {/* Block D: Communications Hub */}
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded-lg border bg-white p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
-            <BlockLabel label="Last Touchpoint" className="mb-0" />
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              <BlockLabel label="Last Touchpoint" className="mb-0" />
+            </div>
+            {!showTouchpoint && (
+              <button
+                onClick={() => setShowTouchpoint(true)}
+                className="text-xs text-blue-600 hover:underline"
+              >
+                + Log touchpoint
+              </button>
+            )}
           </div>
-          {lastActivity ? (
+
+          {showTouchpoint ? (
+            <div className="space-y-2">
+              <Textarea
+                value={touchpointContent}
+                onChange={(e) => setTouchpointContent(e.target.value)}
+                placeholder="What happened in this touchpoint?"
+                rows={3}
+                className="text-sm resize-none"
+                autoFocus
+              />
+              <div className="flex gap-2">
+                <Select value={touchpointType} onValueChange={(v) => setTouchpointType(v as ActivityLogType)}>
+                  <SelectTrigger className="h-8 text-xs flex-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(["Call", "Meeting", "Email", "Note"] as ActivityLogType[]).map((t) => (
+                      <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button size="sm" className="h-8" onClick={handleTouchpointLog} disabled={touchpointLoading}>
+                  {touchpointLoading ? "Logging..." : "Log"}
+                </Button>
+                <Button size="sm" variant="outline" className="h-8" onClick={() => { setShowTouchpoint(false); setTouchpointContent("") }}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : lastActivity ? (
             <div>
               <p className="text-xs text-muted-foreground mb-1">
                 {formatDistanceToNow(new Date(lastActivity.created_at), { addSuffix: true })} · {lastActivity.type}

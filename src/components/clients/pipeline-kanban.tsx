@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { GripVertical, DollarSign, User, AlertCircle } from "lucide-react"
+import { GripVertical, User, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { getFaviconUrl } from "@/lib/favicon"
 import { updatePipelineStage } from "@/actions/companies"
@@ -37,10 +37,6 @@ function ragLabel(score: number) {
   return "text-green-600"
 }
 
-function formatUsd(value: number | null) {
-  if (value == null) return null
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value)
-}
 
 export function PipelineKanban({ companies }: Props) {
   const router = useRouter()
@@ -103,8 +99,6 @@ export function PipelineKanban({ companies }: Props) {
         {STAGES.map(({ key, color, bg, dot }) => {
           const col = stagedCompanies.filter((c) => c.pipeline_stage === key)
           const isOver = dragOverStage === key
-          const totalValue = col.reduce((sum, c) => sum + (c.contract_value ?? 0), 0)
-
           return (
             <div
               key={key}
@@ -129,18 +123,10 @@ export function PipelineKanban({ companies }: Props) {
                 </div>
               </div>
 
-              {totalValue > 0 && (
-                <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2 px-0.5">
-                  <DollarSign className="h-3 w-3" />
-                  <span>{formatUsd(totalValue)}</span>
-                </div>
-              )}
-
               <div className="space-y-2 flex-1 overflow-y-auto">
                 {col.map((company) => {
                   const favicon = getFaviconUrl(company.website)
                   const activeBlocker = company.blocker.find((b) => b.status === "Open")
-                  const value = formatUsd(company.contract_value)
 
                   return (
                     <div
@@ -175,12 +161,6 @@ export function PipelineKanban({ companies }: Props) {
                           </div>
 
                           <div className="space-y-0.5">
-                            {value && (
-                              <div className="flex items-center gap-1 text-xs font-medium text-slate-700">
-                                <DollarSign className="h-3 w-3 text-slate-400" />
-                                {value}
-                              </div>
-                            )}
                             {company.primary_csm && (
                               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                 <User className="h-3 w-3" />

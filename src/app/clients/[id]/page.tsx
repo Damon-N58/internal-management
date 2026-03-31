@@ -14,10 +14,12 @@ import type { Profile } from "@/types"
 
 type Props = {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ tab?: string }>
 }
 
-export default async function ClientDetailPage({ params }: Props) {
+export default async function ClientDetailPage({ params, searchParams }: Props) {
   const { id } = await params
+  const { tab } = await searchParams
   const profile = await requireAuth()
 
   if (!isAdmin(profile)) {
@@ -105,7 +107,7 @@ export default async function ClientDetailPage({ params }: Props) {
         </div>
       </div>
 
-      <ClientDetailTabs company={fullCompany} teamMembers={assignableUsers} />
+      <ClientDetailTabs company={fullCompany} teamMembers={assignableUsers} defaultTab={tab ?? "csm"} />
     </div>
   )
 }
