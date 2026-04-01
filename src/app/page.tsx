@@ -28,6 +28,7 @@ export default async function DashboardPage() {
     let companyQuery = supabase
       .from("company")
       .select("*, deadline(*), activity_log(*), blocker(*), ticket(*)")
+      .eq("is_archived", false)
       .order("health_score", { ascending: true })
 
     const sevenDaysOut = addDays(new Date(), 7).toISOString()
