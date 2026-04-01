@@ -68,6 +68,8 @@ export type Database = {
           contract_value: number | null
           next_action: string | null
           ball_in_court: string | null
+          is_archived: boolean
+          archived_at: string | null
           created_at: string
           updated_at: string
         }
@@ -95,6 +97,8 @@ export type Database = {
           contract_value?: number | null
           next_action?: string | null
           ball_in_court?: string | null
+          is_archived?: boolean
+          archived_at?: string | null
           created_at?: string
           updated_at?: string
         }

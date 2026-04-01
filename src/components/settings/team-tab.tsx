@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { StatusBadge } from "@/components/status-badge"
-import { inviteUser, updateUserRole } from "@/actions/team"
+import { createTeamMember, updateUserRole } from "@/actions/team"
 import type { Profile, UserRole } from "@/types"
 
 type Props = {
@@ -22,6 +22,7 @@ type Props = {
 }
 
 const defaultForm = {
+  fullName: "",
   email: "",
   role: "Member" as UserRole,
 }
@@ -31,16 +32,19 @@ export function TeamTab({ profiles: initialProfiles, currentUserId, isAdmin: adm
   const [form, setForm] = useState(defaultForm)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [createdPassword, setCreatedPassword] = useState("")
 
-  const handleInvite = async () => {
-    if (!form.email.trim()) return
+  const handleCreate = async () => {
+    if (!form.fullName.trim() || !form.email.trim()) return
     setError("")
+    setCreatedPassword("")
     setLoading(true)
     try {
-      await inviteUser(form.email, form.role)
+      const result = await createTeamMember(form.fullName, form.email, form.role)
+      setCreatedPassword(result.tempPassword)
       setForm(defaultForm)
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to send invitation")
+      setError(e instanceof Error ? e.message : "Failed to create account")
     }
     setLoading(false)
   }
@@ -54,15 +58,23 @@ export function TeamTab({ profiles: initialProfiles, currentUserId, isAdmin: adm
     <div className="space-y-6">
       {admin && (
         <div className="rounded-lg border bg-white p-4 space-y-4">
-          <h3 className="text-sm font-semibold">Invite Team Member</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <h3 className="text-sm font-semibold">Add Team Member</h3>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <Label>Full Name</Label>
+              <Input
+                value={form.fullName}
+                onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                placeholder="Jane Smith"
+              />
+            </div>
             <div className="space-y-1.5">
               <Label>Email</Label>
               <Input
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                placeholder="jane@nineteen58.com"
+                placeholder="jane@nineteen58.co.za"
               />
             </div>
             <div className="space-y-1.5">
@@ -82,16 +94,20 @@ export function TeamTab({ profiles: initialProfiles, currentUserId, isAdmin: adm
               </Select>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">
-            An invitation email will be sent via Clerk. The user will set their own name and password on sign-up.
-          </p>
+          {createdPassword && (
+            <div className="rounded-md bg-green-50 border border-green-200 px-3 py-2">
+              <p className="text-xs font-medium text-green-800">Account created. Share this temp password with the new member:</p>
+              <p className="text-sm font-mono font-bold text-green-900 mt-0.5">{createdPassword}</p>
+              <p className="text-xs text-green-700 mt-1">They can change it after first login via Settings.</p>
+            </div>
+          )}
           {error && <p className="text-sm text-red-600">{error}</p>}
           <Button
-            onClick={handleInvite}
-            disabled={loading || !form.email.trim()}
+            onClick={handleCreate}
+            disabled={loading || !form.fullName.trim() || !form.email.trim()}
             size="sm"
           >
-            {loading ? "Sending..." : "Send Invitation"}
+            {loading ? "Creating..." : "Create Account"}
           </Button>
         </div>
       )}

@@ -11,7 +11,7 @@ export default async function ClientsPage() {
   const [myCompanyIdsResult, companiesResult, profilesResult] = await Promise.all([
     getUserCompanyIds(profile.id),
     managerOrAbove
-      ? supabase.from("company").select("*, blocker(*)").order("name", { ascending: true })
+      ? supabase.from("company").select("*, blocker(*)").eq("is_archived", false).order("name", { ascending: true })
       : null,
     managerOrAbove
       ? supabase.from("profile").select("id, full_name, email").order("full_name", { ascending: true })
@@ -25,6 +25,7 @@ export default async function ClientsPage() {
     : (await supabase
         .from("company")
         .select("*, blocker(*)")
+        .eq("is_archived", false)
         .in("id", myCompanyIds.length > 0 ? myCompanyIds : ["_none"])
         .order("name", { ascending: true })
       ).data ?? []

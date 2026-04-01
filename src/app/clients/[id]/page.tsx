@@ -1,9 +1,10 @@
 import { supabase } from "@/lib/supabase"
 import { notFound } from "next/navigation"
-import { requireAuth, getUserCompanyIds, isAdmin } from "@/lib/auth"
+import { requireAuth, getUserCompanyIds, isAdmin, isManagerOrAbove } from "@/lib/auth"
 import { ClientDetailTabs } from "@/components/clients/client-detail-tabs"
 import { HealthBadge } from "@/components/health-badge"
 import { StatusBadge } from "@/components/status-badge"
+import { ArchiveCompanyButton } from "@/components/clients/archive-company-button"
 import Link from "next/link"
 import Image from "next/image"
 import { ChevronLeft } from "lucide-react"
@@ -21,6 +22,7 @@ export default async function ClientDetailPage({ params, searchParams }: Props) 
   const { id } = await params
   const { tab } = await searchParams
   const profile = await requireAuth()
+  const canManage = isManagerOrAbove(profile)
 
   if (!isAdmin(profile)) {
     const companyIds = await getUserCompanyIds(profile.id)
@@ -105,6 +107,9 @@ export default async function ClientDetailPage({ params, searchParams }: Props) 
             </span>
           </div>
         </div>
+        {canManage && (
+          <ArchiveCompanyButton companyId={company.id} companyName={company.name} />
+        )}
       </div>
 
       <ClientDetailTabs company={fullCompany} teamMembers={assignableUsers} defaultTab={tab ?? "csm"} />

@@ -218,3 +218,29 @@ export async function updateCsmComms(
   revalidatePath(`/clients/${companyId}`)
   return {}
 }
+
+export async function archiveCompany(companyId: string): Promise<{ error?: string }> {
+  // Mark as archived
+  const { error } = await supabase
+    .from("company")
+    .update({ is_archived: true, archived_at: new Date().toISOString() })
+    .eq("id", companyId)
+
+  if (error) return { error: error.message }
+
+  // Remove all team assignments so nobody gets notifications for this company
+  await supabase
+    .from("user_company_assignment")
+    .delete()
+    .eq("company_id", companyId)
+
+  // Dismiss any pending notifications for this company
+  await supabase
+    .from("notification")
+    .delete()
+    .eq("company_id", companyId)
+
+  revalidatePath("/clients")
+  revalidatePath(`/clients/${companyId}`)
+  return {}
+}

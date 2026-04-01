@@ -6,19 +6,34 @@ import { requireAuth, isAdmin } from "@/lib/auth"
 import { clerkClient } from "@clerk/nextjs/server"
 import type { UserRole } from "@/types"
 
-export async function inviteUser(email: string, role: UserRole) {
+export async function createTeamMember(fullName: string, email: string, role: UserRole) {
   const profile = await requireAuth()
   if (!isAdmin(profile)) throw new Error("Admin only")
 
+  const [first, ...rest] = fullName.trim().split(" ")
+  const last = rest.join(" ") || undefined
+  const tempPassword = `N58@${first}2026!`
+
   const client = await clerkClient()
-  await client.invitations.createInvitation({
-    emailAddress: email,
+
+  // Create Clerk account directly — no sign-up flow needed
+  const user = await client.users.createUser({
+    emailAddress: [email],
+    password: tempPassword,
+    firstName: first,
+    lastName: last,
     publicMetadata: { role },
-    redirectUrl: (process.env.NEXT_PUBLIC_APP_URL ?? "") + "/",
+    skipPasswordChecks: true,
   })
 
+  // Seed Supabase profile with the real Clerk ID
+  await supabase.from("profile").upsert(
+    { id: user.id, email, full_name: fullName, role, created_at: new Date().toISOString() },
+    { onConflict: "id", ignoreDuplicates: true }
+  )
+
   revalidatePath("/settings")
-  return { email }
+  return { email, tempPassword }
 }
 
 export async function updateUserRole(userId: string, role: UserRole) {

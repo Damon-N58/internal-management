@@ -11,10 +11,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 const NEW_MEMBERS = [
-  { full_name: "Emil Kenguerli",     email: "emil@nineteen58.co.za",     first: "Emil",     last: "Kenguerli" },
-  { full_name: "Lamé Labuschagne",   email: "lame@nineteen58.co.za",     first: "Lamé",     last: "Labuschagne" },
-  { full_name: "Rex le Sueur",       email: "rex@nineteen58.co.za",      first: "Rex",      last: "le Sueur" },
-  { full_name: "Yashmiri Shanmugam", email: "yashmiri@nineteen58.co.za", first: "Yashmiri", last: "Shanmugam" },
+  { full_name: "Robyn Broodryk", email: "robyn@nineteen58.co.za", first: "Robyn", last: "Broodryk" },
 ]
 
 function tempPassword(firstName: string) {
