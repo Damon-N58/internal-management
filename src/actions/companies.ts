@@ -244,3 +244,14 @@ export async function archiveCompany(companyId: string): Promise<{ error?: strin
   revalidatePath(`/clients/${companyId}`)
   return {}
 }
+
+export async function unarchiveCompany(companyId: string): Promise<{ error?: string }> {
+  const { error } = await supabase
+    .from("company")
+    .update({ is_archived: false, archived_at: null })
+    .eq("id", companyId)
+
+  if (error) return { error: error.message }
+  revalidatePath("/clients")
+  return {}
+}
